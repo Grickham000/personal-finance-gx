@@ -27,9 +27,9 @@ class ExpenseService:
         # Transform entities to DTOs
         return [self.expense_toa.entity_to_dto(expense) for expense in expenses_entities]
 
-    def update_expense(self, expense_dto: ExpenseDTO):
+    def update_expense(self, expense_dto: ExpenseDTO,id):
         # Transform DTO to entity
         expense_entity = self.expense_toa.dto_to_entity(expense_dto)
 
         # Delegate to DAO to update the entity
-        self.expense_dao.update_expense(expense_entity)
+        self.expense_dao.update_expense(expense_entity,id)

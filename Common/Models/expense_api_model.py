@@ -1,5 +1,5 @@
 class ExpenseApiModel:
-    def __init__(self, user_id, expense, expense_type, payment_method, expense_description, expense_date):
+    def __init__(self,  expense, expense_type, payment_method, expense_description, expense_date,user_id=None):
         self.user_id = user_id
         self.expense = expense
         self.expense_type = expense_type

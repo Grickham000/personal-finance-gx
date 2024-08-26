@@ -67,12 +67,13 @@ def update_expense(req: func.HttpRequest) -> func.HttpResponse:
 
         # Parse request data and transform to DTO
         req_body = req.get_json()
+        id = req.route_params.get('id')
         expense_api_model = ExpenseApiModel(**req_body)
         expense_dto = ExpenseDTO.from_api_model(expense_api_model)
         expense_dto.user_id = user_id
 
         # Delegate to service to handle update
-        expense_service.update_expense(expense_dto)
+        expense_service.update_expense(expense_dto,id)
 
         return func.HttpResponse(f"Expense updated successfully", status_code=200)
     except Exception as e:
