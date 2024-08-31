@@ -1,5 +1,6 @@
 from Common.Models.expense_api_model import ExpenseApiModel
 
+#This is the model the Business layer will use to executie the business logic.
 class ExpenseDTO:
     def __init__(self, user_id, expense, expense_type, payment_method, expense_description, expense_date,id):
         self.user_id = user_id
@@ -10,6 +11,7 @@ class ExpenseDTO:
         self.expense_date = expense_date
         self.id = id
 
+# This transform the API validation model to the DTO model
     @classmethod
     def from_api_model(cls, api_model: ExpenseApiModel,id=None):
         return cls(
@@ -21,7 +23,7 @@ class ExpenseDTO:
             expense_date=api_model.expense_date,
             id =id
         )
-
+#This help us to convert the model to a dictionary to send it out as response.
     def to_dict(self):
         return {
             'id':self.id,

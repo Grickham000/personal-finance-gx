@@ -1,3 +1,4 @@
+#This is the API validation model to check if we are getting the response as expected.
 class ExpenseApiModel:
     def __init__(self,  expense, expense_type, payment_method, expense_description, expense_date,user_id=None):
         self.user_id = user_id
