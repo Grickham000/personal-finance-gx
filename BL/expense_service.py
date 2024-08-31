@@ -33,3 +33,8 @@ class ExpenseService:
 
         # Delegate to DAO to update the entity
         self.expense_dao.update_expense(expense_entity,id)
+
+    def delete_expense(self,user_id,id):
+
+        #Delegate to DAO to delete the entity 
+        self.expense_dao.delete_expense(user_id,id)

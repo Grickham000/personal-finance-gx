@@ -78,3 +78,21 @@ def update_expense(req: func.HttpRequest) -> func.HttpResponse:
         return func.HttpResponse(f"Expense updated successfully", status_code=200)
     except Exception as e:
         return func.HttpResponse(f"Failed to update expense: {str(e)}", status_code=400)
+
+def delete_expense(req : func.HttpRequest) -> func.HttpResponse:
+    logging.info('Processing delete expense request')
+    try:
+        #Authenticate user
+        token = req.headers.get('Authorization').split('Bearer ')[1]
+        user_id = expense_service.verify_token(token)
+        if(user_id):
+            #Parse request data and transform to DTO 
+            id = req.route_params.get('id')
+            #Delegate to service to handle delete
+            expense_service.delete_expense(user_id,id)
+        else:
+            return func.HttpResponse(f"Not authorized",status_code=401)
+
+        return func.HttpResponse(f"Expense deleted successfully",status_code=404)
+    except Exception as e:
+        return func.HttpResponse(f"Failed to update expense: {str(e)}",status_code=400)

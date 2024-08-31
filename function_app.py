@@ -1,6 +1,6 @@
 import azure.functions as func
 from Common.firebase_config import firebase_app  # Ensure Firebase is initialized
-from API.expenses_controller import create_expense, get_expenses, update_expense
+from API.expenses_controller import create_expense, get_expenses, update_expense, delete_expense
 from API.user_registration_controller import user_registration
 
 app = func.FunctionApp(http_auth_level=func.AuthLevel.FUNCTION)
@@ -25,3 +25,7 @@ def update_expense_route(req: func.HttpRequest) -> func.HttpResponse:
 @app.route(route="user_registration", methods=["POST"])
 def create_user_registration(req: func.HttpRequest) -> func.HttpResponse:
     return user_registration(req)
+
+@app.route(route="expenses/{id}", methods=["DELETE"])
+def delete_expense_route(req: func.HttpRequest) -> func.HttpResponse:
+    return delete_expense(req)

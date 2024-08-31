@@ -44,4 +44,45 @@ class ExpenseDAO:
     def update_expense(self, expense_entity: ExpenseEntity,id):
 
         expense_ref = self.db.collection('expense').document(id)
-        expense_ref.update(expense_entity.to_dict())
+
+        #Retrieve the document to check the user_id
+        expense =expense_ref.get()
+
+        if expense.exists:
+            expense_data = expense.to_dict()
+            if expense_data.get('user_id') == expense_entity.user_id:
+                #ID match
+                expense_ref.update(expense_entity.to_dict())
+                logging.info(f"Expense with ID {id} for user_id {expense_entity.user_id} successfully updated.")
+                return True
+            else:
+                #ID doesnt match
+                logging.warning(f"Attempt to update expense with ID {id} denied due to user_id mismatch.")
+                raise PermissionError("You do not have permission to update this expense.")
+        else:
+            #Document doesnt exist
+            logging.warning(f"Expense with ID {id} does not exist.")
+            raise ValueError(f"Expense with ID {id} does not exist.")
+
+    def delete_expense(self, user_id: str, id: str):
+        expense_ref = self.db.collection('expense').document(id)
+    
+        # Retrieve the document to check the user_id
+        expense = expense_ref.get()
+        
+        if expense.exists:
+            expense_data = expense.to_dict()
+            if expense_data.get('user_id') == user_id:
+                # User ID matches, proceed to delete the document
+                expense_ref.delete()
+                logging.info(f"Expense with ID {id} for user_id {user_id} successfully deleted.")
+                return True
+            else:
+                # User ID does not match, raise an error or return a response
+                logging.warning(f"Attempt to delete expense with ID {id} denied due to user_id mismatch.")
+                raise PermissionError("You do not have permission to delete this expense.")
+        else:
+            # Document does not exist
+            logging.warning(f"Expense with ID {id} does not exist.")
+            raise ValueError(f"Expense with ID {id} does not exist.")
+
