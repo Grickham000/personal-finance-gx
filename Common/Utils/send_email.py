@@ -4,7 +4,7 @@ import logging
 
 def send_verification_email(id_token):
     api_key = os.getenv('FIREBASE_API_KEY')
-    logging.info(api_key)
+    
     url = f"https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key={api_key}"
     headers = {
         "Content-Type": "application/json"
