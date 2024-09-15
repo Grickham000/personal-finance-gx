@@ -10,8 +10,19 @@ class ExpenseService:
         self.expense_dao = ExpenseDAO()
 
     def verify_token(self, token: str) -> str:
-        decoded_token = auth.verify_id_token(token)
-        return decoded_token['uid']
+        try:
+        # Decode and verify the ID token
+            decoded_token = auth.verify_id_token(token)
+            
+            # Check if the email is verified
+            if not decoded_token.get('email_verified', False):
+                raise ValueError("User's email is not verified.")
+
+            # Return the user's UID if the email is verified
+            return decoded_token['uid']
+        except Exception as e:
+            # Handle exceptions (e.g., token verification failure)
+            raise ValueError(f"Token verification failed: {str(e)}")
 
     def create_expense(self, expense_dto: ExpenseDTO) -> str:
         # Transform DTO to entity
