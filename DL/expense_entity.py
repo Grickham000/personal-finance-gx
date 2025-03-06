@@ -1,12 +1,13 @@
 #This is the Entity model for expenses
 class BaseExpenseEntity:
-    def __init__(self, user_id, expense, expense_type, payment_method, expense_description, expense_date):
+    def __init__(self, user_id, expense, expense_type, payment_method, expense_description, expense_date,payment_method_cut_date=None):
         self.user_id = user_id
         self.expense = expense
         self.expense_type = expense_type
         self.payment_method = payment_method
         self.expense_description = expense_description
         self.expense_date = expense_date
+        self.payment_method_cut_date = payment_method_cut_date
 #To dict function to help us return the data as dictionary
     def to_dict(self):
         return {
@@ -14,6 +15,7 @@ class BaseExpenseEntity:
             'expense': self.expense,
             'expense_type': self.expense_type,
             'payment_method': self.payment_method,
+            'payment_method_cut_date': self.payment_method_cut_date,
             'expense_description': self.expense_description,
             'expense_date': self.expense_date
         }
@@ -21,12 +23,13 @@ class BaseExpenseEntity:
     def __repr__(self):
         return (f"{self.__class__.__name__}(user_id={self.user_id}, expense={self.expense}, "
                 f"expense_type={self.expense_type}, payment_method={self.payment_method}, "
-                f"expense_description={self.expense_description}, expense_date={self.expense_date})")
+                f"expense_description={self.expense_description}, expense_date={self.expense_date},"
+                f"payment_method_cut_date={self.payment_method_cut_date})")
 
 #Polimorfism to validate when we get an Id to delte or update
 class ExpenseEntity(BaseExpenseEntity):
-    def __init__(self, user_id, expense, expense_type, payment_method, expense_description, expense_date, id=None):
-        super().__init__(user_id, expense, expense_type, payment_method, expense_description, expense_date)
+    def __init__(self, user_id, expense, expense_type, payment_method, expense_description, expense_date,payment_method_cut_date=None, id=None):
+        super().__init__(user_id, expense, expense_type, payment_method, expense_description, expense_date,payment_method_cut_date)
         self.id = id
 
     def to_dict(self):
@@ -42,6 +45,7 @@ class ExpenseEntity(BaseExpenseEntity):
             expense=data['expense'],
             expense_type=data['expense_type'],
             payment_method=data['payment_method'],
+            payment_method_cut_date=data['payment_method_cut_date'],
             expense_description=data['expense_description'],
             expense_date=data['expense_date'],
             id=id

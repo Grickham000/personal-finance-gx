@@ -1,8 +1,8 @@
 from Common.Models.expense_api_model import ExpenseApiModel
 
-#This is the model the Business layer will use to executie the business logic.
+# This is the model the Business layer will use to execute the business logic.
 class ExpenseDTO:
-    def __init__(self, user_id, expense, expense_type, payment_method, expense_description, expense_date,id):
+    def __init__(self, user_id, expense, expense_type, payment_method, expense_description, expense_date, id, payment_method_cut_date=None):
         self.user_id = user_id
         self.expense = expense
         self.expense_type = expense_type
@@ -10,10 +10,11 @@ class ExpenseDTO:
         self.expense_description = expense_description
         self.expense_date = expense_date
         self.id = id
+        self.payment_method_cut_date = payment_method_cut_date
 
-# This transform the API validation model to the DTO model
+    # This transforms the API validation model to the DTO model
     @classmethod
-    def from_api_model(cls, api_model: ExpenseApiModel,id=None):
+    def from_api_model(cls, api_model: ExpenseApiModel, id=None):
         return cls(
             user_id=api_model.user_id,
             expense=api_model.expense,
@@ -21,16 +22,20 @@ class ExpenseDTO:
             payment_method=api_model.payment_method,
             expense_description=api_model.expense_description,
             expense_date=api_model.expense_date,
-            id =id
+            id=id,
+            payment_method_cut_date=api_model.payment_method_cut_date
         )
-#This help us to convert the model to a dictionary to send it out as response.
+
+    # This helps us to convert the model to a dictionary to send it out as a response.
     def to_dict(self):
         return {
-            'id':self.id,
+            'id': self.id,
             'user_id': self.user_id,
             'expense': self.expense,
             'expense_type': self.expense_type,
             'payment_method': self.payment_method,
+            'payment_method_cut_date':self.payment_method_cut_date,
             'expense_description': self.expense_description,
             'expense_date': self.expense_date
         }
+        

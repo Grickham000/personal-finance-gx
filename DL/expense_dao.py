@@ -10,6 +10,8 @@ class ExpenseDAO:
     def create_expense(self, expense_entity: ExpenseEntity) -> str:
         # Parse the string to a datetime object
         expense_entity.expense_date = datetime.fromisoformat(expense_entity.expense_date.replace("Z", "+00:00"))
+        if(expense_entity.payment_method_cut_date):
+            expense_entity.payment_method_cut_date = datetime.fromisoformat(expense_entity.payment_method_cut_date.replace("Z", "+00:00"))
 
         expense_ref = self.db.collection('expense').add(expense_entity.to_dict())
         return expense_ref[1].id
@@ -26,10 +28,14 @@ class ExpenseDAO:
             expense_dict = expense.to_dict()  # Convert document snapshot to dictionary
             doc_id = expense.id  # Get the document ID
 
-            # Check if the object is of date type
+            # Check if the object is of date type, editing date type for the expense_date
             if isinstance(expense_dict['expense_date'], date):
                 # Convert datetime to string
                 expense_dict['expense_date'] = expense_dict['expense_date'].strftime("%Y-%m-%d %H:%M:%S")
+            # Check if the object is of date type, editing date type for the payment_method_cut_date
+            if isinstance(expense_dict['payment_method_cut_date'], date):
+                # Convert datetime to string
+                expense_dict['payment_method_cut_date'] = expense_dict['payment_method_cut_date'].strftime("%Y-%m-%d %H:%M:%S")
 
             logging.info(f"Expense data: {expense_dict}, Document ID: {doc_id}")  # Log the data and document ID
             expense_entity = ExpenseEntity.from_dict(expense_dict, id=doc_id)  # Create ExpenseEntity with ID
