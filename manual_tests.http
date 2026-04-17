@@ -1,0 +1,167 @@
+@baseUrl = https://personalfinancegx-cgctcugsgtfgfpew.eastus2-01.azurewebsites.net/api
+# Uncomment the line below to test locally instead
+# @baseUrl = http://localhost:7071/api
+
+# ---------------------------------------------------------
+# SETUP VARIABLES
+# 1. Provide your Firebase Web API Key
+@firebaseApiKey =
+# 2. Provide your Azure Function Key
+@azureFunctionKey = 
+# 3. Paste the ID Token you get from the Login step
+@token =
+# ---------------------------------------------------------
+
+
+### 1. Register a new User
+# This hits your user_registration controller
+POST {{baseUrl}}/user_registration?code={{azureFunctionKey}}
+Content-Type: application/json
+
+{
+    "email": "guru.aalfa+test3@gmail.com",
+    "password": "testpass123"
+}
+
+### 2. Login to get ID Token (Firebase Identity Toolkit)
+# Run this AFTER registering. Copy the "idToken" from the response 
+# and paste it into the @token variable at the top of this file.
+POST https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key={{firebaseApiKey}}
+Content-Type: application/json
+
+{
+    "email": "guru.aalfa+test3@gmail.com",
+    "password": "testpass123",
+    "returnSecureToken": true
+}
+
+
+# =========================================================
+# EXPENSES (VARIABLE)
+# =========================================================
+
+### 3. Create an Expense
+POST {{baseUrl}}/expenses?code={{azureFunctionKey}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "expense": 150.50,
+    "expense_type": "food",
+    "payment_method": "cc1",
+    "expense_description": "Manual Test Groceries",
+    "expense_date": "2023-11-01T12:00:00Z"
+}
+
+### 4. Get Expenses
+GET {{baseUrl}}/expenses?code={{azureFunctionKey}}
+Authorization: Bearer {{token}}
+
+### 5. Update an Expense
+# First, copy an ID from the "Get Expenses" response and replace YOUR_EXPENSE_ID_HERE
+@expenseId = inRkMLWFXx3XqT63Bivl
+
+PUT {{baseUrl}}/expenses/{{expenseId}}?code={{azureFunctionKey}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "expense": 200.00,
+    "expense_type": "food",
+    "payment_method": "cc1",
+    "expense_description": "Manual Test Groceries Updated",
+    "expense_date": "2023-11-01T12:00:00Z"
+}
+
+### 6. Delete an Expense
+DELETE {{baseUrl}}/expenses/{{expenseId}}?code={{azureFunctionKey}}
+Authorization: Bearer {{token}}
+
+
+# =========================================================
+# FIXED EXPENSES
+# =========================================================
+
+### 7. Create a Fixed Expense
+POST {{baseUrl}}/fixed_expenses?code={{azureFunctionKey}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "fixed_expense": 1000.00,
+    "fexpense_type": "housing",
+    "fexpense_start_date": "2023-01-01T00:00:00Z",
+    "fexpense_end_date": "2023-12-31T00:00:00Z",
+    "fexpense_description": "Rent",
+    "expire": false
+}
+
+### 8. Get Fixed Expenses
+GET {{baseUrl}}/fixed_expenses?code={{azureFunctionKey}}
+Authorization: Bearer {{token}}
+
+### 9. Update a Fixed Expense
+# First, copy an ID from the "Get Fixed Expenses" response and replace YOUR_FIXED_EXPENSE_ID_HERE
+@fixedExpenseId =UXDUSigoOsV2Ccn9aLw9
+
+PUT {{baseUrl}}/fixed_expenses/{{fixedExpenseId}}?code={{azureFunctionKey}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "fixed_expense": 1050.00,
+    "fexpense_type": "housing",
+    "fexpense_start_date": "2023-01-01T00:00:00Z",
+    "fexpense_end_date": "2023-12-31T00:00:00Z",
+    "fexpense_description": "Rent Updated",
+    "expire": false
+}
+
+### 10. Delete a Fixed Expense
+DELETE {{baseUrl}}/fixed_expenses/{{fixedExpenseId}}?code={{azureFunctionKey}}
+Authorization: Bearer {{token}}
+
+# =========================================================
+# USER PROFILE
+# =========================================================
+
+### 11. Create a User Profile
+POST {{baseUrl}}/user_profile?code={{azureFunctionKey}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "user_name": "John Doe",
+    "expense_types": ["food", "transport", "education", "entertainment"],
+    "payment_methods": [
+        {"name": "credit card1", "cut_date": 16},
+        {"name": "credit card2", "cut_date": 25}
+    ],
+    "monthly_income": 5000.00
+}
+
+### 12. Get User Profile
+GET {{baseUrl}}/user_profile?code={{azureFunctionKey}}
+Authorization: Bearer {{token}}
+
+### 13. Update User Profile
+# Replace PROFILE_ID with the ID returned from the create step
+@profileId =k6vDaBNnigo4ACKl0HEx
+PUT {{baseUrl}}/user_profile/{{profileId}}?code={{azureFunctionKey}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "user_name": "John Doe Updated",
+    "expense_types": ["food", "transport", "education", "health"],
+    "payment_methods": [
+        {"name": "credit card1", "cut_date": 16},
+        {"name": "credit card2", "cut_date": 25},
+        {"name": "debit card", "cut_date": 1}
+    ],
+    "monthly_income": 5500.00
+}
+
+### 14. Delete User Profile
+DELETE {{baseUrl}}/user_profile/{{profileId}}?code={{azureFunctionKey}}
+Authorization: Bearer {{token}}

@@ -6,6 +6,8 @@ from API.expenses_controller import create_expense, get_expenses, update_expense
 from API.user_registration_controller import user_registration
 #fixed expenses
 from API.fixed_expenses_controller import create_fixed_expense, get_fixed_expenses, update_fixed_expense, delete_fixed_expense
+#user profile
+from API.user_profile_controller import create_user_profile, get_user_profile, update_user_profile, delete_user_profile
 
 app = func.FunctionApp(http_auth_level=func.AuthLevel.FUNCTION)
 
@@ -49,3 +51,19 @@ def update_fixed_expense_route(req: func.HttpRequest) -> func.HttpResponse:
 @app.route(route="fixed_expenses/{id}", methods=["DELETE"])
 def delete_fixed_expense_route(req: func.HttpRequest) -> func.HttpResponse:
     return delete_fixed_expense(req)
+
+@app.route(route="user_profile", methods=["POST"])
+def create_user_profile_route(req: func.HttpRequest) -> func.HttpResponse:
+    return create_user_profile(req)
+
+@app.route(route="user_profile", methods=["GET"])
+def get_user_profile_route(req: func.HttpRequest) -> func.HttpResponse:
+    return get_user_profile(req)
+
+@app.route(route="user_profile/{id}", methods=["PUT"])
+def update_user_profile_route(req: func.HttpRequest) -> func.HttpResponse:
+    return update_user_profile(req)
+
+@app.route(route="user_profile/{id}", methods=["DELETE"])
+def delete_user_profile_route(req: func.HttpRequest) -> func.HttpResponse:
+    return delete_user_profile(req)
