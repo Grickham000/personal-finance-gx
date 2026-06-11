@@ -92,3 +92,21 @@ class FixedExpenseDAO:
             logging.warning(f"Fixed Expense with ID {id} does not exist.")
             raise ValueError(f"Fixed Expense with ID {id} does not exist.")
 
+    def get_fixed_expense_by_id(self, user_id: str, id: str) -> FixedExpenseEntity:
+        logging.info(f"Retrieving fixed expense {id} for user_id: {user_id}")
+        expense_ref = self.db.collection('fixed_expenses').document(id)
+        expense = expense_ref.get()
+        if expense.exists:
+            expense_dict = expense.to_dict()
+            if expense_dict.get('user_id') == user_id:
+                if isinstance(expense_dict.get('fexpense_start_date'), date):
+                    expense_dict['fexpense_start_date'] = expense_dict['fexpense_start_date'].strftime("%Y-%m-%d %H:%M:%S")
+                if isinstance(expense_dict.get('fexpense_end_date'), date):
+                    expense_dict['fexpense_end_date'] = expense_dict['fexpense_end_date'].strftime("%Y-%m-%d %H:%M:%S")
+                return FixedExpenseEntity.from_dict(expense_dict, id=id)
+            else:
+                logging.warning(f"Attempt to access fixed expense with ID {id} denied due to user_id mismatch.")
+                raise PermissionError("You do not have permission to access this fixed expense.")
+        return None
+
+

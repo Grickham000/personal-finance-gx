@@ -15,7 +15,7 @@ def sample_profile_payload():
     return {
         "user_name": "Test User",
         "expense_types": ["food", "transport"],
-        "payment_methods": [{"name": "card1", "cut_date": 16}],
+        "payment_methods": [{"name": "card1", "cut_date": 16, "is_immediate": False, "days_to_pay": 20}],
         "monthly_income": 5000.0
     }
 

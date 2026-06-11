@@ -1,13 +1,17 @@
 import azure.functions as func
 from Common.firebase_config import firebase_app  # Ensure Firebase is initialized
 #expenses
-from API.expenses_controller import create_expense, get_expenses, update_expense, delete_expense
+from API.expenses_controller import create_expense, get_expenses, update_expense, delete_expense, get_expense_by_id
 #registration
 from API.user_registration_controller import user_registration
 #fixed expenses
-from API.fixed_expenses_controller import create_fixed_expense, get_fixed_expenses, update_fixed_expense, delete_fixed_expense
+from API.fixed_expenses_controller import create_fixed_expense, get_fixed_expenses, update_fixed_expense, delete_fixed_expense, get_fixed_expense_by_id
 #user profile
 from API.user_profile_controller import create_user_profile, get_user_profile, update_user_profile, delete_user_profile
+#money balance
+from API.money_balance_controller import get_money_balance
+#credit card payments
+from API.credit_card_payments_controller import create_credit_card_payment, get_credit_card_payments, delete_credit_card_payment
 
 app = func.FunctionApp(http_auth_level=func.AuthLevel.FUNCTION)
 
@@ -67,3 +71,27 @@ def update_user_profile_route(req: func.HttpRequest) -> func.HttpResponse:
 @app.route(route="user_profile/{id}", methods=["DELETE"])
 def delete_user_profile_route(req: func.HttpRequest) -> func.HttpResponse:
     return delete_user_profile(req)
+
+@app.route(route="expenses/{id}", methods=["GET"])
+def get_expense_by_id_route(req: func.HttpRequest) -> func.HttpResponse:
+    return get_expense_by_id(req)
+
+@app.route(route="fixed_expenses/{id}", methods=["GET"])
+def get_fixed_expense_by_id_route(req: func.HttpRequest) -> func.HttpResponse:
+    return get_fixed_expense_by_id(req)
+
+@app.route(route="money_balance", methods=["GET"])
+def get_money_balance_route(req: func.HttpRequest) -> func.HttpResponse:
+    return get_money_balance(req)
+
+@app.route(route="credit_card_payments", methods=["POST"])
+def create_credit_card_payment_route(req: func.HttpRequest) -> func.HttpResponse:
+    return create_credit_card_payment(req)
+
+@app.route(route="credit_card_payments", methods=["GET"])
+def get_credit_card_payments_route(req: func.HttpRequest) -> func.HttpResponse:
+    return get_credit_card_payments(req)
+
+@app.route(route="credit_card_payments/{id}", methods=["DELETE"])
+def delete_credit_card_payment_route(req: func.HttpRequest) -> func.HttpResponse:
+    return delete_credit_card_payment(req)

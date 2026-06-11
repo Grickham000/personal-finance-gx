@@ -37,8 +37,20 @@ def get_fixed_expenses(req: func.HttpRequest) -> func.HttpResponse:
         token = req.headers.get('Authorization').split('Bearer ')[1]
         user_id = fixed_expense_service.verify_token(token)
 
+        # Get query parameters
+        fexpense_type = req.params.get('fexpense_type')
+        start_date = req.params.get('start_date')
+        end_date = req.params.get('end_date')
+        expire = req.params.get('expire')
+
         # Delegate to service to retrieve expenses
-        fixed_expenses_list = fixed_expense_service.get_fixed_expenses(user_id)
+        fixed_expenses_list = fixed_expense_service.get_fixed_expenses(
+            user_id,
+            fexpense_type=fexpense_type,
+            start_date=start_date,
+            end_date=end_date,
+            expire=expire
+        )
         # Convert each ExpenseDTO to a dictionary
         fixed_expenses_dict_list = [fexpense.to_dict() for fexpense in fixed_expenses_list]
 
@@ -55,6 +67,32 @@ def get_fixed_expenses(req: func.HttpRequest) -> func.HttpResponse:
             body=f"Failed to retrieve fixed expenses: {str(e)}",
             status_code=400,
             mimetype='text/plain'  # Default content type for errors
+        )
+
+def get_fixed_expense_by_id(req: func.HttpRequest) -> func.HttpResponse:
+    logging.info('Processing get fixed expense by ID request.')
+    try:
+        token = req.headers.get('Authorization').split('Bearer ')[1]
+        user_id = fixed_expense_service.verify_token(token)
+        
+        id = req.route_params.get('id')
+        if not id:
+            return func.HttpResponse("Fixed Expense ID is required", status_code=400)
+            
+        fixed_expense_dto = fixed_expense_service.get_fixed_expense_by_id(user_id, id)
+        if fixed_expense_dto:
+            return func.HttpResponse(
+                body=json.dumps(fixed_expense_dto.to_dict()),
+                status_code=200,
+                mimetype='application/json'
+            )
+        else:
+            return func.HttpResponse("Fixed expense not found", status_code=404)
+    except Exception as e:
+        return func.HttpResponse(
+            body=f"Failed to retrieve fixed expense: {str(e)}",
+            status_code=400,
+            mimetype='text/plain'
         )
 
 def update_fixed_expense(req: func.HttpRequest) -> func.HttpResponse:

@@ -5,9 +5,10 @@ from API.expense_dto import ExpenseDTO
 
 @pytest.fixture
 def expense_service(mocker):
-    # Mock TOA and DAO
+    # Mock TOA, DAO, and UserProfileDAO
     mocker.patch('BL.expense_service.ExpenseTOA')
     mocker.patch('BL.expense_service.ExpenseDAO')
+    mocker.patch('BL.expense_service.UserProfileDAO')
     return ExpenseService()
 
 def test_verify_token_success(expense_service, mocker):
@@ -35,6 +36,10 @@ def test_verify_token_email_not_verified(expense_service, mocker):
 def test_create_expense(expense_service):
     # Setup mocks
     mock_dto = MagicMock(spec=ExpenseDTO)
+    mock_dto.payment_method_id = "cc1_id"
+    mock_dto.payment_method = "credit card1"
+    mock_dto.user_id = "test_user_id"
+    
     mock_entity = MagicMock()
     expense_service.expense_toa.dto_to_entity.return_value = mock_entity
     expense_service.expense_dao.create_expense.return_value = "new_expense_id"
@@ -46,6 +51,30 @@ def test_create_expense(expense_service):
     assert result == "new_expense_id"
     expense_service.expense_toa.dto_to_entity.assert_called_once_with(mock_dto)
     expense_service.expense_dao.create_expense.assert_called_once_with(mock_entity)
+
+def test_create_expense_resolves_payment_method_id(expense_service):
+    # Setup mock DTO with no payment_method_id
+    mock_dto = MagicMock(spec=ExpenseDTO)
+    mock_dto.payment_method_id = None
+    mock_dto.payment_method = "credit card1"
+    mock_dto.user_id = "test_user_id"
+    
+    # Mock profile response
+    mock_profile = MagicMock()
+    mock_profile.payment_methods = [
+        {"id": "cc1_id", "name": "credit card1", "is_immediate": False}
+    ]
+    expense_service.user_profile_dao.get_profile.return_value = mock_profile
+    
+    mock_entity = MagicMock()
+    expense_service.expense_toa.dto_to_entity.return_value = mock_entity
+    expense_service.expense_dao.create_expense.return_value = "new_expense_id"
+    
+    result = expense_service.create_expense(mock_dto)
+    
+    assert result == "new_expense_id"
+    assert mock_dto.payment_method_id == "cc1_id"
+    expense_service.user_profile_dao.get_profile.assert_called_once_with("test_user_id")
 
 def test_get_expenses(expense_service):
     # Setup mocks
@@ -65,6 +94,10 @@ def test_get_expenses(expense_service):
 def test_update_expense(expense_service):
     # Setup mocks
     mock_dto = MagicMock(spec=ExpenseDTO)
+    mock_dto.payment_method_id = "cc1_id"
+    mock_dto.payment_method = "credit card1"
+    mock_dto.user_id = "test_user_id"
+    
     mock_entity = MagicMock()
     expense_service.expense_toa.dto_to_entity.return_value = mock_entity
 

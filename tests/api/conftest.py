@@ -55,10 +55,7 @@ def auth_headers():
             headers["x-functions-key"] = azure_key
             
         print("\n\n[PAUSED] Test user created! You can now verify the backend state if you wish.")
-        try:
-            input("Press Enter to continue with API validation (Note: you must run pytest with the '-s' flag to use this prompt)...")
-        except EOFError:
-            pass # pytest captures stdin by default unless -s is used
+        # Non-interactive execution, skipping manual pause
         
         yield headers
         

@@ -38,6 +38,7 @@ def test_get_expenses_success(mock_expense_service):
     # Setup mock request
     req = MagicMock(spec=func.HttpRequest)
     req.headers.get.return_value = "Bearer valid_token"
+    req.params = {}
 
     # Setup mock service
     mock_expense_service.verify_token.return_value = "user123"
@@ -54,7 +55,13 @@ def test_get_expenses_success(mock_expense_service):
     body = json.loads(response.get_body().decode())
     assert len(body) == 1
     assert body[0]["id"] == "exp1"
-    mock_expense_service.get_expenses.assert_called_once_with("user123")
+    mock_expense_service.get_expenses.assert_called_once_with(
+        "user123",
+        expense_type=None,
+        payment_method=None,
+        start_date=None,
+        end_date=None
+    )
 
 def test_create_expense_unauthorized(mock_expense_service):
     # Setup mock request

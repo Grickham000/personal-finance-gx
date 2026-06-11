@@ -1,6 +1,6 @@
 #This is the Entity model for expenses
 class BaseExpenseEntity:
-    def __init__(self, user_id, expense, expense_type, payment_method, expense_description, expense_date,payment_method_cut_date=None):
+    def __init__(self, user_id, expense, expense_type, payment_method, expense_description, expense_date, payment_method_cut_date=None, payment_method_id=None):
         self.user_id = user_id
         self.expense = expense
         self.expense_type = expense_type
@@ -8,6 +8,8 @@ class BaseExpenseEntity:
         self.expense_description = expense_description
         self.expense_date = expense_date
         self.payment_method_cut_date = payment_method_cut_date
+        self.payment_method_id = payment_method_id
+
 #To dict function to help us return the data as dictionary
     def to_dict(self):
         return {
@@ -17,19 +19,21 @@ class BaseExpenseEntity:
             'payment_method': self.payment_method,
             'payment_method_cut_date': self.payment_method_cut_date,
             'expense_description': self.expense_description,
-            'expense_date': self.expense_date
+            'expense_date': self.expense_date,
+            'payment_method_id': self.payment_method_id
         }
+
 #Help us to get the data in a printable format
     def __repr__(self):
         return (f"{self.__class__.__name__}(user_id={self.user_id}, expense={self.expense}, "
                 f"expense_type={self.expense_type}, payment_method={self.payment_method}, "
                 f"expense_description={self.expense_description}, expense_date={self.expense_date},"
-                f"payment_method_cut_date={self.payment_method_cut_date})")
+                f"payment_method_cut_date={self.payment_method_cut_date}, payment_method_id={self.payment_method_id})")
 
-#Polimorfism to validate when we get an Id to delte or update
+#Polimorfism to validate when we get an Id to delete or update
 class ExpenseEntity(BaseExpenseEntity):
-    def __init__(self, user_id, expense, expense_type, payment_method, expense_description, expense_date,payment_method_cut_date=None, id=None):
-        super().__init__(user_id, expense, expense_type, payment_method, expense_description, expense_date,payment_method_cut_date)
+    def __init__(self, user_id, expense, expense_type, payment_method, expense_description, expense_date, payment_method_cut_date=None, payment_method_id=None, id=None):
+        super().__init__(user_id, expense, expense_type, payment_method, expense_description, expense_date, payment_method_cut_date, payment_method_id)
         self.id = id
 
     def to_dict(self):
@@ -37,6 +41,7 @@ class ExpenseEntity(BaseExpenseEntity):
         if self.id is not None:
             base_dict['id'] = self.id  # Add the ID if it exists
         return base_dict
+
 #To dict function to help us return the data as dictionary
     @classmethod
     def from_dict(cls, data, id=None):
@@ -45,11 +50,13 @@ class ExpenseEntity(BaseExpenseEntity):
             expense=data['expense'],
             expense_type=data['expense_type'],
             payment_method=data['payment_method'],
-            payment_method_cut_date=data['payment_method_cut_date'],
+            payment_method_cut_date=data.get('payment_method_cut_date'),
             expense_description=data['expense_description'],
             expense_date=data['expense_date'],
+            payment_method_id=data.get('payment_method_id'),
             id=id
         )
+
 #Help us to get the data in a printable format
     def __repr__(self):
         return super().__repr__() + f", id={self.id}"  # Add the ID to the repr output

@@ -13,8 +13,8 @@ def test_create_and_manage_user_profile(base_url, auth_headers):
         "user_name": "API Test User",
         "expense_types": ["food", "transport", "utilities"],
         "payment_methods": [
-            {"name": "cc1", "cut_date": 16},
-            {"name": "cc2", "cut_date": 25}
+            {"name": "cc1", "cut_date": 16, "is_immediate": False, "days_to_pay": 20},
+            {"name": "cc2", "cut_date": 25, "is_immediate": False, "days_to_pay": 10}
         ],
         "monthly_income": 6000.00
     }

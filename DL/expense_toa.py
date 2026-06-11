@@ -10,7 +10,8 @@ class ExpenseTOA:
             payment_method=dto.payment_method,
             expense_description=dto.expense_description,
             expense_date=dto.expense_date,
-            payment_method_cut_date=dto.payment_method_cut_date
+            payment_method_cut_date=dto.payment_method_cut_date,
+            payment_method_id=dto.payment_method_id
         )
 
     def entity_to_dto(self, entity: ExpenseEntity) -> ExpenseDTO:
@@ -22,5 +23,6 @@ class ExpenseTOA:
             payment_method=entity.payment_method,
             expense_description=entity.expense_description,
             expense_date=entity.expense_date,
-            payment_method_cut_date=entity.payment_method_cut_date
+            payment_method_cut_date=entity.payment_method_cut_date,
+            payment_method_id=entity.payment_method_id
         )

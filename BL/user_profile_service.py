@@ -36,6 +36,17 @@ class UserProfileService:
         return None
 
     def update_profile(self, dto: UserProfileDTO, id: str):
+        existing_entity = self.user_profile_dao.get_profile(dto.user_id)
+        if existing_entity:
+            existing_pm_ids = {
+                pm.get('name', '').lower(): pm.get('id')
+                for pm in (existing_entity.payment_methods or [])
+                if pm.get('id')
+            }
+            for pm in (dto.payment_methods or []):
+                name_lower = pm.get('name', '').lower()
+                if name_lower in existing_pm_ids:
+                    pm['id'] = existing_pm_ids[name_lower]
         entity = self.user_profile_toa.dto_to_entity(dto)
         return self.user_profile_dao.update_profile(entity, id)
 

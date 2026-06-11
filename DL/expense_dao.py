@@ -92,3 +92,21 @@ class ExpenseDAO:
             logging.warning(f"Expense with ID {id} does not exist.")
             raise ValueError(f"Expense with ID {id} does not exist.")
 
+    def get_expense_by_id(self, user_id: str, id: str) -> ExpenseEntity:
+        logging.info(f"Retrieving expense {id} for user_id: {user_id}")
+        expense_ref = self.db.collection('expense').document(id)
+        expense = expense_ref.get()
+        if expense.exists:
+            expense_dict = expense.to_dict()
+            if expense_dict.get('user_id') == user_id:
+                if isinstance(expense_dict.get('expense_date'), date):
+                    expense_dict['expense_date'] = expense_dict['expense_date'].strftime("%Y-%m-%d %H:%M:%S")
+                if isinstance(expense_dict.get('payment_method_cut_date'), date):
+                    expense_dict['payment_method_cut_date'] = expense_dict['payment_method_cut_date'].strftime("%Y-%m-%d %H:%M:%S")
+                return ExpenseEntity.from_dict(expense_dict, id=id)
+            else:
+                logging.warning(f"Attempt to access expense with ID {id} denied due to user_id mismatch.")
+                raise PermissionError("You do not have permission to access this expense.")
+        return None
+
+

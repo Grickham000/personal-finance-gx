@@ -7,7 +7,7 @@
 # 1. Provide your Firebase Web API Key
 @firebaseApiKey =
 # 2. Provide your Azure Function Key
-@azureFunctionKey = 
+@azureFunctionKey =
 # 3. Paste the ID Token you get from the Login step
 @token =
 # ---------------------------------------------------------
@@ -46,11 +46,11 @@ Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
-    "expense": 150.50,
+    "expense": 1050.50,
     "expense_type": "food",
-    "payment_method": "cc1",
+    "payment_method": "credit card1",
     "expense_description": "Manual Test Groceries",
-    "expense_date": "2023-11-01T12:00:00Z"
+    "expense_date": "2026-05-16T09:15:00Z"
 }
 
 ### 4. Get Expenses
@@ -59,18 +59,19 @@ Authorization: Bearer {{token}}
 
 ### 5. Update an Expense
 # First, copy an ID from the "Get Expenses" response and replace YOUR_EXPENSE_ID_HERE
-@expenseId = inRkMLWFXx3XqT63Bivl
+@expenseId = UXEZhgm5hsQMWUsoKsjm
 
 PUT {{baseUrl}}/expenses/{{expenseId}}?code={{azureFunctionKey}}
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
-    "expense": 200.00,
+    "expense": 1050.5,
     "expense_type": "food",
-    "payment_method": "cc1",
-    "expense_description": "Manual Test Groceries Updated",
-    "expense_date": "2023-11-01T12:00:00Z"
+    "payment_method": "credit card1",
+    "payment_method_cut_date": null,
+    "expense_description": "Manual Test Groceries",
+    "expense_date": "2026-05-16 09:15:00"
 }
 
 ### 6. Delete an Expense
@@ -134,8 +135,9 @@ Content-Type: application/json
     "user_name": "John Doe",
     "expense_types": ["food", "transport", "education", "entertainment"],
     "payment_methods": [
-        {"name": "credit card1", "cut_date": 16},
-        {"name": "credit card2", "cut_date": 25}
+        {"name": "credit card1", "cut_date": 16, "is_immediate": false, "days_to_pay": 20},
+        {"name": "credit card2", "cut_date": 25, "is_immediate": false, "days_to_pay": 10},
+        {"name": "debit card", "cut_date": 0, "is_immediate": true, "days_to_pay": 0}
     ],
     "monthly_income": 5000.00
 }
@@ -146,7 +148,8 @@ Authorization: Bearer {{token}}
 
 ### 13. Update User Profile
 # Replace PROFILE_ID with the ID returned from the create step
-@profileId =k6vDaBNnigo4ACKl0HEx
+# The backend automatically matches payment method names against existing ones to keep IDs stable.
+@profileId =LI4JmpD1cHu7qvNxaSRz
 PUT {{baseUrl}}/user_profile/{{profileId}}?code={{azureFunctionKey}}
 Authorization: Bearer {{token}}
 Content-Type: application/json
@@ -155,9 +158,9 @@ Content-Type: application/json
     "user_name": "John Doe Updated",
     "expense_types": ["food", "transport", "education", "health"],
     "payment_methods": [
-        {"name": "credit card1", "cut_date": 16},
-        {"name": "credit card2", "cut_date": 25},
-        {"name": "debit card", "cut_date": 1}
+        {"name": "credit card1", "cut_date": 16, "is_immediate": false, "days_to_pay": 20},
+        {"name": "credit card2", "cut_date": 25, "is_immediate": false, "days_to_pay": 10},
+        {"name": "debit card", "cut_date": 0, "is_immediate": true, "days_to_pay": 0}
     ],
     "monthly_income": 5500.00
 }
@@ -165,3 +168,55 @@ Content-Type: application/json
 ### 14. Delete User Profile
 DELETE {{baseUrl}}/user_profile/{{profileId}}?code={{azureFunctionKey}}
 Authorization: Bearer {{token}}
+
+
+# =========================================================
+# NEW ENDPOINTS (GET BY ID, FILTERS, MONEY BALANCE)
+# =========================================================
+
+### 15. Get a single Variable Expense by ID
+# Replace YOUR_EXPENSE_ID_HERE with a valid expense ID
+@singleExpenseId = 9KlNAKW3nHKOHQex1U3e
+GET {{baseUrl}}/expenses/{{singleExpenseId}}?code={{azureFunctionKey}}
+Authorization: Bearer {{token}}
+
+### 16. Get Variable Expenses with Filters
+GET {{baseUrl}}/expenses?expense_type=food&payment_method=debit%20card&code={{azureFunctionKey}}
+Authorization: Bearer {{token}}
+
+### 17. Get a single Fixed Expense by ID
+# Replace YOUR_FIXED_EXPENSE_ID_HERE with a valid fixed expense ID
+@singleFixedExpenseId = YOUR_FIXED_EXPENSE_ID_HERE
+GET {{baseUrl}}/fixed_expenses/{{singleFixedExpenseId}}?code={{azureFunctionKey}}
+Authorization: Bearer {{token}}
+
+### 18. Get Fixed Expenses with Filters
+GET {{baseUrl}}/fixed_expenses?fexpense_type=housing&expire=false&code={{azureFunctionKey}}
+Authorization: Bearer {{token}}
+
+### 19. Get Money Balance for target month
+GET {{baseUrl}}/money_balance?month=2026-06&code={{azureFunctionKey}}
+Authorization: Bearer {{token}}
+
+### 20. Create a Credit Card Payment
+POST {{baseUrl}}/credit_card_payments?code={{azureFunctionKey}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "payment_method_id": "508cd0b2c6e84cbe84190f6d7a54bbea",
+    "statement_month": "2026-05",
+    "payment_date": "2026-06-04 10:00:00",
+    "amount_paid": 1050.5
+}
+
+### 21. Get All Credit Card Payments
+GET {{baseUrl}}/credit_card_payments?code={{azureFunctionKey}}
+Authorization: Bearer {{token}}
+
+### 22. Delete a Credit Card Payment
+# Replace YOUR_PAYMENT_ID_HERE with a valid payment ID from Get All response
+@paymentId = P06pFLYTmo3SvxRZjw91
+DELETE {{baseUrl}}/credit_card_payments/{{paymentId}}?code={{azureFunctionKey}}
+Authorization: Bearer {{token}}
+
