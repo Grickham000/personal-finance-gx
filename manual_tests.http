@@ -220,3 +220,100 @@ Authorization: Bearer {{token}}
 DELETE {{baseUrl}}/credit_card_payments/{{paymentId}}?code={{azureFunctionKey}}
 Authorization: Bearer {{token}}
 
+
+# =========================================================
+# SAVINGS ACCOUNTS
+# =========================================================
+
+### 23. Create a Savings Account
+POST {{baseUrl}}/savings_accounts?code={{azureFunctionKey}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "name": "Ally Savings Account",
+    "interest_rate": 4.25,
+    "balance": 10000.0,
+    "description": "Emergency Fund"
+}
+
+### 24. Get Savings Accounts
+GET {{baseUrl}}/savings_accounts?code={{azureFunctionKey}}
+Authorization: Bearer {{token}}
+
+### 25. Get a single Savings Account by ID
+# Replace YOUR_SAVINGS_ACCOUNT_ID_HERE with a valid ID
+@savingsAccountId = CniqdKzRA0Sh03y6yHu6
+GET {{baseUrl}}/savings_accounts/{{savingsAccountId}}?code={{azureFunctionKey}}
+Authorization: Bearer {{token}}
+
+### 26. Update a Savings Account
+PUT {{baseUrl}}/savings_accounts/{{savingsAccountId}}?code={{azureFunctionKey}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "name": "Ally Savings Account Updated",
+    "interest_rate": 4.5,
+    "balance": 10500.0,
+    "description": "Emergency Fund Main"
+}
+
+### 27. Delete a Savings Account
+DELETE {{baseUrl}}/savings_accounts/{{savingsAccountId}}?code={{azureFunctionKey}}
+Authorization: Bearer {{token}}
+
+
+# =========================================================
+# INVESTMENTS
+# =========================================================
+
+### 28. Create an Investment
+POST {{baseUrl}}/investments?code={{azureFunctionKey}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "name": "Treasury Bill 6-Month",
+    "interest_rate": 5.2,
+    "amount": 5000.0,
+    "has_end_date": true,
+    "end_date": "2026-12-16T12:00:00Z",
+    "is_released": false,
+    "description": "Short term government bond"
+}
+
+### 29. Get Investments
+GET {{baseUrl}}/investments?code={{azureFunctionKey}}
+Authorization: Bearer {{token}}
+
+### 30. Get Investments with Filters
+GET {{baseUrl}}/investments?has_end_date=true&is_released=false&code={{azureFunctionKey}}
+Authorization: Bearer {{token}}
+
+### 31. Get a single Investment by ID
+# Replace YOUR_INVESTMENT_ID_HERE with a valid ID
+@investmentId = YOUR_INVESTMENT_ID_HERE
+GET {{baseUrl}}/investments/{{investmentId}}?code={{azureFunctionKey}}
+Authorization: Bearer {{token}}
+
+### 32. Update an Investment
+PUT {{baseUrl}}/investments/{{investmentId}}?code={{azureFunctionKey}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "name": "Treasury Bill 6-Month Updated",
+    "interest_rate": 5.25,
+    "amount": 5000.0,
+    "has_end_date": true,
+    "end_date": "2026-12-16T12:00:00Z",
+    "is_released": true,
+    "description": "Matured short term government bond"
+}
+
+### 33. Delete an Investment
+DELETE {{baseUrl}}/investments/{{investmentId}}?code={{azureFunctionKey}}
+Authorization: Bearer {{token}}
+
+

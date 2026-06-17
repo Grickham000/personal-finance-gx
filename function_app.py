@@ -12,6 +12,11 @@ from API.user_profile_controller import create_user_profile, get_user_profile, u
 from API.money_balance_controller import get_money_balance
 #credit card payments
 from API.credit_card_payments_controller import create_credit_card_payment, get_credit_card_payments, delete_credit_card_payment
+#savings accounts
+from API.savings_accounts_controller import create_savings_account, get_savings_accounts, get_savings_account_by_id, update_savings_account, delete_savings_account
+#investments
+from API.investments_controller import create_investment, get_investments, get_investment_by_id, update_investment, delete_investment
+
 
 app = func.FunctionApp(http_auth_level=func.AuthLevel.FUNCTION)
 
@@ -95,3 +100,45 @@ def get_credit_card_payments_route(req: func.HttpRequest) -> func.HttpResponse:
 @app.route(route="credit_card_payments/{id}", methods=["DELETE"])
 def delete_credit_card_payment_route(req: func.HttpRequest) -> func.HttpResponse:
     return delete_credit_card_payment(req)
+
+# Savings Accounts Routes
+@app.route(route="savings_accounts", methods=["POST"])
+def create_savings_account_route(req: func.HttpRequest) -> func.HttpResponse:
+    return create_savings_account(req)
+
+@app.route(route="savings_accounts", methods=["GET"])
+def get_savings_accounts_route(req: func.HttpRequest) -> func.HttpResponse:
+    return get_savings_accounts(req)
+
+@app.route(route="savings_accounts/{id}", methods=["GET"])
+def get_savings_account_by_id_route(req: func.HttpRequest) -> func.HttpResponse:
+    return get_savings_account_by_id(req)
+
+@app.route(route="savings_accounts/{id}", methods=["PUT"])
+def update_savings_account_route(req: func.HttpRequest) -> func.HttpResponse:
+    return update_savings_account(req)
+
+@app.route(route="savings_accounts/{id}", methods=["DELETE"])
+def delete_savings_account_route(req: func.HttpRequest) -> func.HttpResponse:
+    return delete_savings_account(req)
+
+# Investments Routes
+@app.route(route="investments", methods=["POST"])
+def create_investment_route(req: func.HttpRequest) -> func.HttpResponse:
+    return create_investment(req)
+
+@app.route(route="investments", methods=["GET"])
+def get_investments_route(req: func.HttpRequest) -> func.HttpResponse:
+    return get_investments(req)
+
+@app.route(route="investments/{id}", methods=["GET"])
+def get_investment_by_id_route(req: func.HttpRequest) -> func.HttpResponse:
+    return get_investment_by_id(req)
+
+@app.route(route="investments/{id}", methods=["PUT"])
+def update_investment_route(req: func.HttpRequest) -> func.HttpResponse:
+    return update_investment(req)
+
+@app.route(route="investments/{id}", methods=["DELETE"])
+def delete_investment_route(req: func.HttpRequest) -> func.HttpResponse:
+    return delete_investment(req)
