@@ -74,6 +74,10 @@ The core layers are:
 4. Ensure your Firebase Service Account JSON file is at the root of the project (as defined in `Common/firebase_config.py`).
 
 ### Deployment Configuration (Azure Portal)
+
+> [!NOTE]
+> **Authentication Level**: The ASGI function app is configured with `func.AuthLevel.ANONYMOUS` in [function_app.py](file:///c:/Users/gurua/Documents/Repositories/personal-finance-gx/function_app.py). This allows client applications (mobile and web frontends) to connect directly. Security is enforced inside the application controllers by verifying the client's Firebase Bearer Token on every authenticated endpoint, bypassing the need for a system-level Azure Function Key.
+
 When deploying this function to Azure, you **must** configure the same environment variables in the cloud:
 1. Go to your Function App in the Azure Portal.
 2. Navigate to **Settings > Environment variables** (or **Configuration**).
