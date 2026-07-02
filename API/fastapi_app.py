@@ -84,7 +84,12 @@ def adapt_request(request: Request, body_bytes: bytes = b"", route_params: dict 
             if v is not None:
                 params[k] = str(v)
                 
-    headers = dict(request.headers)
+    headers = {}
+    for k, v in request.headers.items():
+        headers[k] = v
+        # Also map standard Title-Case headers (e.g., 'authorization' -> 'Authorization')
+        parts = [p.capitalize() for p in k.split('-')]
+        headers['-'.join(parts)] = v
     
     return func.HttpRequest(
         method=request.method,
