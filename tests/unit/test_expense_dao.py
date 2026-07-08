@@ -16,7 +16,7 @@ def test_create_expense(expense_dao, mock_firestore):
     # Setup mock entity
     mock_entity = MagicMock(spec=ExpenseEntity)
     mock_entity.expense_date = "2023-10-01T10:00:00Z"
-    mock_entity.payment_method_cut_date = "2023-10-15T10:00:00Z"
+    mock_entity.payment_method_cut_date = 15
     mock_entity.to_dict.return_value = {"amount": 100}
 
     # Setup firestore mock

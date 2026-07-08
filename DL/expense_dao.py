@@ -10,8 +10,6 @@ class ExpenseDAO:
     def create_expense(self, expense_entity: ExpenseEntity) -> str:
         # Parse the string to a datetime object
         expense_entity.expense_date = datetime.fromisoformat(expense_entity.expense_date.replace("Z", "+00:00"))
-        if(expense_entity.payment_method_cut_date):
-            expense_entity.payment_method_cut_date = datetime.fromisoformat(expense_entity.payment_method_cut_date.replace("Z", "+00:00"))
 
         expense_ref = self.db.collection('expense').add(expense_entity.to_dict())
         return expense_ref[1].id

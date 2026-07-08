@@ -181,11 +181,13 @@ class MoneyBalanceService:
 
         return {
             "monthly_income": monthly_income,
+            "total_income": monthly_income,
             "total_immediate_expenses": total_immediate_expenses,
             "total_credit_expenses_due": total_credit_expenses_due,
             "total_fixed_expenses": total_fixed_expenses,
             "total_credit_payments_made": total_credit_payments_made,
             "total_expenses": total_expenses,
             "remaining_balance": remaining_balance,
+            "cash_flow": remaining_balance,
             "target_month": target_month_str
         }
