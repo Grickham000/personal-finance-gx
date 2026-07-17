@@ -51,19 +51,45 @@ export default function ProfileScreen() {
 
   const fetchProfile = useCallback(async () => {
     try {
-      const data = await apiService.getUserProfile();
-      if (data) {
-        setProfileId(data.id);
-        setUserName(data.user_name || '');
-        setMonthlyIncome(String(data.monthly_income || '0'));
-        setCategories(data.expense_types || []);
-        setPaymentMethods(data.payment_methods || []);
+      // Fetch both profile and expenses in parallel to merge categories
+      const [profileData, expensesData] = await Promise.all([
+        apiService.getUserProfile().catch((err: any) => {
+          if (err.response?.status === 404 || (err.response?.data && typeof err.response.data === 'string' && err.response.data.includes('not found'))) {
+            return null;
+          }
+          throw err;
+        }),
+        apiService.getExpenses().catch((err: any) => {
+          console.warn('Failed to load expenses for categories:', err);
+          return [];
+        })
+      ]);
+
+      // Extract unique categories from logged expenses
+      const expenseCategories: string[] = Array.from(
+        new Set((expensesData || []).map((exp: any) => exp.expense_type?.trim().toLowerCase()))
+      ).filter(Boolean) as string[];
+
+      if (profileData) {
+        setProfileId(profileData.id);
+        setUserName(profileData.user_name || '');
+        setMonthlyIncome(String(profileData.monthly_income || '0'));
+        
+        // Merge profile expense types with actual categories from expenses
+        const profileCategories = (profileData.expense_types || []).map((c: string) => c.trim().toLowerCase());
+        const mergedCategories = Array.from(new Set([...profileCategories, ...expenseCategories]));
+        setCategories(mergedCategories);
+        setPaymentMethods(profileData.payment_methods || []);
+      } else {
+        // If no profile, use unique expense categories or fallback to default
+        if (expenseCategories.length > 0) {
+          setCategories(expenseCategories);
+        } else {
+          setCategories(['food', 'transport', 'housing', 'services', 'entertainment', 'other']);
+        }
       }
     } catch (err: any) {
-      // 404 is fine, means no profile registered yet
-      if (err.response?.status !== 404 && !(err.response?.data && typeof err.response.data === 'string' && err.response.data.includes('not found'))) {
-        console.error('Failed to load profile:', err);
-      }
+      console.error('Failed to load profile:', err);
     } finally {
       setLoading(false);
     }

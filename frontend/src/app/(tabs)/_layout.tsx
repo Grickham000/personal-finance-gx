@@ -1,7 +1,7 @@
 import { Tabs } from 'expo-router';
 import { useTheme } from '../../context/ThemeContext';
 import { Platform } from 'react-native';
-import { LayoutDashboard, ReceiptText, Landmark, UserRound } from 'lucide-react-native';
+import { LayoutDashboard, ReceiptText, Landmark, UserRound, CreditCard } from 'lucide-react-native';
 
 export default function TabsLayout() {
   const { colors } = useTheme();
@@ -39,6 +39,13 @@ export default function TabsLayout() {
         options={{
           title: 'Expenses',
           tabBarIcon: ({ color, size }) => <ReceiptText size={size} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="credit_cards"
+        options={{
+          title: 'Cards',
+          tabBarIcon: ({ color, size }) => <CreditCard size={size} color={color} />,
         }}
       />
       <Tabs.Screen
