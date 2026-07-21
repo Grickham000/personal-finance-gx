@@ -1,9 +1,10 @@
 class UserProfileApiModel:
-    def __init__(self, user_name: str, expense_types: list, payment_methods: list, monthly_income: float):
+    def __init__(self, user_name: str, expense_types: list, payment_methods: list, monthly_income: float, currency: str = 'USD'):
         self.user_name = user_name
         self.expense_types = expense_types
         self.payment_methods = payment_methods
         self.monthly_income = monthly_income
+        self.currency = currency
 
     @classmethod
     def from_dict(cls, data: dict):
@@ -14,6 +15,10 @@ class UserProfileApiModel:
         expense_types = data.get('expense_types', [])
         payment_methods = data.get('payment_methods', [])
         monthly_income = data.get('monthly_income')
+        currency = data.get('currency', 'USD')
+        
+        if not isinstance(currency, str):
+            raise ValueError("currency must be a string")
         
         if not user_name:
             raise ValueError("user_name is required")
@@ -82,12 +87,13 @@ class UserProfileApiModel:
         except ValueError:
             raise ValueError("monthly_income must be a valid number")
 
-        return cls(user_name, expense_types, payment_methods, monthly_income)
+        return cls(user_name, expense_types, payment_methods, monthly_income, currency)
 
     def to_dict(self):
         return {
             'user_name': self.user_name,
             'expense_types': self.expense_types,
             'payment_methods': self.payment_methods,
-            'monthly_income': self.monthly_income
+            'monthly_income': self.monthly_income,
+            'currency': self.currency
         }

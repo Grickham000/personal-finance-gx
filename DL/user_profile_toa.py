@@ -9,6 +9,7 @@ class UserProfileTOA:
             expense_types=dto.expense_types,
             payment_methods=dto.payment_methods,
             monthly_income=dto.monthly_income,
+            currency=dto.currency,
             id=dto.id
         )
 
@@ -19,5 +20,6 @@ class UserProfileTOA:
             user_name=entity.user_name,
             expense_types=entity.expense_types,
             payment_methods=entity.payment_methods,
-            monthly_income=entity.monthly_income
+            monthly_income=entity.monthly_income,
+            currency=entity.currency
         )

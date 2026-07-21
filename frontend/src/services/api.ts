@@ -132,7 +132,7 @@ export const apiService = {
     fixed_expense: number;
     fexpense_type: string;
     fexpense_start_date: string;
-    fexpense_end_date: string;
+    fexpense_end_date: string | null;
     fexpense_description: string;
     expire: boolean;
   }) => {

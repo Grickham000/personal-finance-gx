@@ -1,6 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React from 'react';
 import { 
-  StyleSheet, 
   Text, 
   View, 
   ScrollView, 
@@ -8,185 +7,60 @@ import {
   TextInput, 
   Modal, 
   ActivityIndicator, 
-  Alert,
-  Switch,
-  Platform
+  Switch
 } from 'react-native';
 import { useTheme } from '../../context/ThemeContext';
-import { apiService } from '../../services/api';
-import { Spacing, Shadows } from '../../constants/theme';
-import { Plus, Trash2, X, Landmark, PiggyBank, Percent, Calendar } from 'lucide-react-native';
-
-type SubTab = 'savings' | 'investments';
+import { Shadows, Spacing } from '../../constants/theme';
+import { Plus, Trash2, X, Landmark, PiggyBank, Percent } from 'lucide-react-native';
+import { getStyles } from '../../styles/investments.styles';
+import { useInvestments } from '../../hooks/useInvestments';
+import { formatCurrency } from '../../utils/currency';
 
 export default function InvestmentsScreen() {
   const { colors } = useTheme();
+  const styles = getStyles(colors);
 
-  // Navigation sub-tab
-  const [activeTab, setActiveTab] = useState<SubTab>('savings');
-  const [loading, setLoading] = useState(true);
-
-  // Data states
-  const [savings, setSavings] = useState<any[]>([]);
-  const [investments, setInvestments] = useState<any[]>([]);
-
-  // Modal forms states
-  const [savingsModalVisible, setSavingsModalVisible] = useState(false);
-  const [savingsName, setSavingsName] = useState('');
-  const [savingsRate, setSavingsRate] = useState('');
-  const [savingsBalance, setSavingsBalance] = useState('');
-  const [savingsDesc, setSavingsDesc] = useState('');
-  const [savingsError, setSavingsError] = useState('');
-
-  const [investmentModalVisible, setInvestmentModalVisible] = useState(false);
-  const [invName, setInvName] = useState('');
-  const [invRate, setInvRate] = useState('');
-  const [invAmount, setInvAmount] = useState('');
-  const [invHasEndDate, setInvHasEndDate] = useState(false);
-  const [invEndDate, setInvEndDate] = useState('');
-  const [invDesc, setInvDesc] = useState('');
-  const [invError, setInvError] = useState('');
-
-  const [submitting, setSubmitting] = useState(false);
-
-  const fetchData = useCallback(async () => {
-    try {
-      // Fetch Savings
-      const savingsData = await apiService.getSavingsAccounts();
-      setSavings(savingsData || []);
-
-      // Fetch Investments
-      const investmentsData = await apiService.getInvestments();
-      setInvestments(investmentsData || []);
-    } catch (err) {
-      console.error('Error fetching savings/investments:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
-
-  const handleAddSavings = async () => {
-    if (!savingsName || !savingsRate || !savingsBalance) {
-      setSavingsError('Please fill in all required fields.');
-      return;
-    }
-    setSubmitting(true);
-    setSavingsError('');
-    try {
-      await apiService.createSavingsAccount({
-        name: savingsName.trim(),
-        interest_rate: parseFloat(savingsRate),
-        balance: parseFloat(savingsBalance),
-        description: savingsDesc.trim()
-      });
-      setSavingsName('');
-      setSavingsRate('');
-      setSavingsBalance('');
-      setSavingsDesc('');
-      setSavingsModalVisible(false);
-      setLoading(true);
-      await fetchData();
-    } catch (err: any) {
-      console.error(err);
-      setSavingsError(err.response?.data || err.message || 'Failed to add savings account.');
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handleAddInvestment = async () => {
-    if (!invName || !invRate || !invAmount) {
-      setInvError('Please fill in all required fields.');
-      return;
-    }
-    setSubmitting(true);
-    setInvError('');
-    try {
-      await apiService.createInvestment({
-        name: invName.trim(),
-        interest_rate: parseFloat(invRate),
-        amount: parseFloat(invAmount),
-        has_end_date: invHasEndDate,
-        end_date: invHasEndDate && invEndDate ? new Date(invEndDate).toISOString() : null,
-        is_released: false,
-        description: invDesc.trim()
-      });
-      setInvName('');
-      setInvRate('');
-      setInvAmount('');
-      setInvHasEndDate(false);
-      setInvEndDate('');
-      setInvDesc('');
-      setInvestmentModalVisible(false);
-      setLoading(true);
-      await fetchData();
-    } catch (err: any) {
-      console.error(err);
-      setInvError(err.response?.data || err.message || 'Failed to add investment.');
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handleDeleteSavings = (id: string, name: string) => {
-    Alert.alert(
-      'Remove Account',
-      `Are you sure you want to remove ${name}?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Remove',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await apiService.deleteSavingsAccount(id);
-              setSavings(savings.filter(s => s.id !== id));
-            } catch (err) {
-              console.error(err);
-              Alert.alert('Error', 'Failed to remove account.');
-            }
-          }
-        }
-      ]
-    );
-  };
-
-  const handleDeleteInvestment = (id: string, name: string) => {
-    Alert.alert(
-      'Delete Investment',
-      `Are you sure you want to delete investment: ${name}?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await apiService.deleteInvestment(id);
-              setInvestments(investments.filter(i => i.id !== id));
-            } catch (err) {
-              console.error(err);
-              Alert.alert('Error', 'Failed to delete investment.');
-            }
-          }
-        }
-      ]
-    );
-  };
-
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(value);
-  };
-
-  const totalSavings = savings.reduce((acc, curr) => acc + (curr.balance || 0), 0);
-  const totalInvestments = investments.reduce((acc, curr) => acc + (curr.amount || 0), 0);
+  const {
+    profile,
+    activeTab,
+    setActiveTab,
+    loading,
+    savings,
+    investments,
+    savingsModalVisible,
+    setSavingsModalVisible,
+    savingsName,
+    setSavingsName,
+    savingsRate,
+    setSavingsRate,
+    savingsBalance,
+    setSavingsBalance,
+    savingsDesc,
+    setSavingsDesc,
+    savingsError,
+    investmentModalVisible,
+    setInvestmentModalVisible,
+    invName,
+    setInvName,
+    invRate,
+    setInvRate,
+    invAmount,
+    setInvAmount,
+    invHasEndDate,
+    setInvHasEndDate,
+    invEndDate,
+    setInvEndDate,
+    invDesc,
+    setInvDesc,
+    invError,
+    submitting,
+    handleAddSavings,
+    handleAddInvestment,
+    handleDeleteSavings,
+    handleDeleteInvestment,
+    totalSavings,
+    totalInvestments,
+  } = useInvestments();
 
   if (loading) {
     return (
@@ -241,7 +115,9 @@ export default function InvestmentsScreen() {
               <PiggyBank size={32} color={colors.primary} />
               <View style={styles.summaryInfo}>
                 <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>Total Savings Portfolio</Text>
-                <Text style={[styles.summaryValue, { color: colors.text }]}>{formatCurrency(totalSavings)}</Text>
+                <Text style={[styles.summaryValue, { color: colors.text }]}>
+                  {formatCurrency(totalSavings, profile?.currency)}
+                </Text>
               </View>
             </View>
 
@@ -273,7 +149,7 @@ export default function InvestmentsScreen() {
                   </View>
                   <View style={styles.assetRight}>
                     <Text style={[styles.assetAmount, { color: colors.text }]}>
-                      {formatCurrency(item.balance)}
+                      {formatCurrency(item.balance, profile?.currency)}
                     </Text>
                     <TouchableOpacity 
                       style={styles.deleteButton} 
@@ -293,7 +169,9 @@ export default function InvestmentsScreen() {
               <Landmark size={32} color={colors.primary} />
               <View style={styles.summaryInfo}>
                 <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>Active Capital Invested</Text>
-                <Text style={[styles.summaryValue, { color: colors.text }]}>{formatCurrency(totalInvestments)}</Text>
+                <Text style={[styles.summaryValue, { color: colors.text }]}>
+                  {formatCurrency(totalInvestments, profile?.currency)}
+                </Text>
               </View>
             </View>
 
@@ -325,7 +203,7 @@ export default function InvestmentsScreen() {
                   </View>
                   <View style={styles.assetRight}>
                     <Text style={[styles.assetAmount, { color: colors.text }]}>
-                      {formatCurrency(item.amount)}
+                      {formatCurrency(item.amount, profile?.currency)}
                     </Text>
                     <TouchableOpacity 
                       style={styles.deleteButton} 
@@ -384,7 +262,7 @@ export default function InvestmentsScreen() {
               </View>
 
               <View style={styles.formGroup}>
-                <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Current Balance (USD)</Text>
+                <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Current Balance ({profile?.currency || 'USD'})</Text>
                 <TextInput
                   style={[styles.formInput, { color: colors.text, borderColor: colors.border }]}
                   placeholder="0.00"
@@ -399,7 +277,7 @@ export default function InvestmentsScreen() {
                 <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Description (Optional)</Text>
                 <TextInput
                   style={[styles.formInput, { color: colors.text, borderColor: colors.border }]}
-                  placeholder="Emergency fund, vacation savings, etc."
+                  placeholder="Additional notes"
                   placeholderTextColor={colors.textMuted}
                   value={savingsDesc}
                   onChangeText={setSavingsDesc}
@@ -442,10 +320,10 @@ export default function InvestmentsScreen() {
 
             <ScrollView contentContainerStyle={styles.formContent}>
               <View style={styles.formGroup}>
-                <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Product / Investment Name</Text>
+                <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Investment Name</Text>
                 <TextInput
                   style={[styles.formInput, { color: colors.text, borderColor: colors.border }]}
-                  placeholder="e.g. Treasury Bill 6-Month"
+                  placeholder="e.g. S&P 500 ETF, Government Bond"
                   placeholderTextColor={colors.textMuted}
                   value={invName}
                   onChangeText={setInvName}
@@ -453,10 +331,10 @@ export default function InvestmentsScreen() {
               </View>
 
               <View style={styles.formGroup}>
-                <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Interest Rate (%)</Text>
+                <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Expected Interest/Yield (% APY)</Text>
                 <TextInput
                   style={[styles.formInput, { color: colors.text, borderColor: colors.border }]}
-                  placeholder="e.g. 5.15"
+                  placeholder="e.g. 8.0"
                   placeholderTextColor={colors.textMuted}
                   keyboardType="decimal-pad"
                   value={invRate}
@@ -465,7 +343,7 @@ export default function InvestmentsScreen() {
               </View>
 
               <View style={styles.formGroup}>
-                <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Principal Amount (USD)</Text>
+                <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Principal Invested Amount ({profile?.currency || 'USD'})</Text>
                 <TextInput
                   style={[styles.formInput, { color: colors.text, borderColor: colors.border }]}
                   placeholder="0.00"
@@ -479,7 +357,7 @@ export default function InvestmentsScreen() {
               <View style={[styles.formGroup, styles.switchContainer]}>
                 <View style={{ flex: 1, marginRight: Spacing.sm }}>
                   <Text style={[styles.formLabel, { color: colors.textSecondary, marginBottom: 0 }]}>Has Maturity Date?</Text>
-                  <Text style={{ fontSize: 11, color: colors.textMuted }}>Specify if this is a fixed-term asset</Text>
+                  <Text style={{ fontSize: 11, color: colors.textMuted }}>Specify if the investment matures on a specific date (e.g. CD or Bond).</Text>
                 </View>
                 <Switch 
                   value={invHasEndDate}
@@ -494,7 +372,7 @@ export default function InvestmentsScreen() {
                   <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Maturity Date (YYYY-MM-DD)</Text>
                   <TextInput
                     style={[styles.formInput, { color: colors.text, borderColor: colors.border }]}
-                    placeholder="2026-12-31"
+                    placeholder="YYYY-MM-DD"
                     placeholderTextColor={colors.textMuted}
                     value={invEndDate}
                     onChangeText={setInvEndDate}
@@ -531,201 +409,3 @@ export default function InvestmentsScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Platform.OS === 'ios' ? 60 : 30,
-    paddingBottom: Spacing.md,
-    borderBottomWidth: 1,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: '800',
-  },
-  addButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.md,
-    paddingVertical: 8,
-    borderRadius: 8,
-    gap: Spacing.xs,
-  },
-  addButtonText: {
-    color: '#FFF',
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  tabContainer: {
-    flexDirection: 'row',
-    marginHorizontal: Spacing.lg,
-    marginTop: Spacing.md,
-    marginBottom: Spacing.sm,
-    borderRadius: 12,
-    borderWidth: 1,
-    padding: 3,
-  },
-  tab: {
-    flex: 1,
-    paddingVertical: 10,
-    alignItems: 'center',
-    borderRadius: 9,
-  },
-  tabText: {
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  scrollContent: {
-    padding: Spacing.lg,
-    paddingBottom: Spacing.xxl,
-    gap: Spacing.md,
-  },
-  summaryCard: {
-    borderRadius: 20,
-    padding: Spacing.lg,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.md,
-  },
-  summaryInfo: {
-    flex: 1,
-  },
-  summaryLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  summaryValue: {
-    fontSize: 24,
-    fontWeight: '800',
-  },
-  assetItem: {
-    borderRadius: 16,
-    borderWidth: 1,
-    padding: Spacing.md,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  assetLeft: {
-    flex: 1,
-    marginRight: Spacing.md,
-  },
-  assetName: {
-    fontSize: 15,
-    fontWeight: '700',
-    marginBottom: 4,
-  },
-  assetMeta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-  },
-  assetMetaText: {
-    fontSize: 11,
-    fontWeight: '700',
-  },
-  assetDesc: {
-    fontSize: 11,
-  },
-  assetRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.md,
-  },
-  assetAmount: {
-    fontSize: 16,
-    fontWeight: '800',
-  },
-  deleteButton: {
-    padding: 4,
-  },
-  emptyContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: Spacing.xxl * 2,
-    gap: Spacing.sm,
-  },
-  emptyText: {
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
-  },
-  modalContent: {
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-    maxHeight: '85%',
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: Spacing.lg,
-    borderBottomWidth: 1,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: '800',
-  },
-  formContent: {
-    padding: Spacing.lg,
-    paddingBottom: Spacing.xxl,
-  },
-  formGroup: {
-    marginBottom: Spacing.md,
-  },
-  formLabel: {
-    fontSize: 13,
-    fontWeight: '600',
-    marginBottom: Spacing.xs,
-  },
-  formInput: {
-    borderWidth: 1,
-    borderRadius: 12,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Platform.OS === 'ios' ? 14 : 12,
-    fontSize: 15,
-    backgroundColor: 'rgba(255, 255, 255, 0.02)',
-  },
-  switchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: Spacing.xs,
-  },
-  saveButton: {
-    borderRadius: 12,
-    paddingVertical: 14,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: Spacing.lg,
-  },
-  saveButtonText: {
-    color: '#FFF',
-    fontSize: 15,
-    fontWeight: '700',
-  },
-  formError: {
-    color: '#EF4444',
-    fontSize: 14,
-    fontWeight: '600',
-    textAlign: 'center',
-    marginVertical: Spacing.sm,
-    paddingHorizontal: Spacing.lg,
-  },
-});

@@ -22,7 +22,8 @@ def create_user_profile(req: func.HttpRequest) -> func.HttpResponse:
             user_name=api_model.user_name,
             expense_types=api_model.expense_types,
             payment_methods=api_model.payment_methods,
-            monthly_income=api_model.monthly_income
+            monthly_income=api_model.monthly_income,
+            currency=api_model.currency
         )
         
         profile_id = user_profile_service.create_profile(dto)
@@ -69,7 +70,8 @@ def update_user_profile(req: func.HttpRequest) -> func.HttpResponse:
             user_name=api_model.user_name,
             expense_types=api_model.expense_types,
             payment_methods=api_model.payment_methods,
-            monthly_income=api_model.monthly_income
+            monthly_income=api_model.monthly_income,
+            currency=api_model.currency
         )
         
         user_profile_service.update_profile(dto, id)

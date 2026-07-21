@@ -53,6 +53,7 @@ class UserProfileCreateSchema(BaseModel):
     expense_types: List[str] = Field(..., description="Supported expense categories", example=["food", "transport"])
     payment_methods: List[PaymentMethodSchema] = Field(..., description="Configured payment methods")
     monthly_income: float = Field(..., description="User's monthly income", example=5000.00)
+    currency: Optional[str] = Field("USD", description="User's preferred currency (e.g. USD, MXN)", example="USD")
 
 class CreditCardPaymentCreateSchema(BaseModel):
     payment_method_id: str = Field(..., description="ID of the credit card payment method", example="508cd0b2c6e84cbe84190f6d7a54bbea")

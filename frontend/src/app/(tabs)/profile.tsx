@@ -1,22 +1,17 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React from 'react';
 import { 
-  StyleSheet, 
   Text, 
   View, 
   ScrollView, 
   TouchableOpacity, 
   TextInput, 
   ActivityIndicator, 
-  Alert,
   Switch,
-  Platform,
   Modal
 } from 'react-native';
 import { useTheme } from '../../context/ThemeContext';
-import { apiService } from '../../services/api';
-import { Spacing, Shadows } from '../../constants/theme';
+import { Shadows, Spacing } from '../../constants/theme';
 import { 
-  User, 
   Plus, 
   X, 
   CreditCard, 
@@ -25,175 +20,42 @@ import {
   Save,
   Trash2
 } from 'lucide-react-native';
+import { getStyles } from '../../styles/profile.styles';
+import { useProfile } from '../../hooks/useProfile';
 
 export default function ProfileScreen() {
-  const { colors, theme, toggleTheme, isDark } = useTheme();
+  const { colors, toggleTheme, isDark } = useTheme();
+  const styles = getStyles(colors);
 
-  // Profile data states
-  const [profileId, setProfileId] = useState<string | null>(null);
-  const [userName, setUserName] = useState('');
-  const [monthlyIncome, setMonthlyIncome] = useState('');
-  
-  // Category tags
-  const [categories, setCategories] = useState<string[]>(['food', 'transport', 'housing', 'services', 'entertainment', 'other']);
-  const [newCategory, setNewCategory] = useState('');
-
-  // Payment methods
-  const [paymentMethods, setPaymentMethods] = useState<any[]>([]);
-  const [newPmName, setNewPmName] = useState('');
-  const [newPmIsImmediate, setNewPmIsImmediate] = useState(true);
-  const [newPmCutDate, setNewPmCutDate] = useState('0');
-  const [newPmDaysToPay, setNewPmDaysToPay] = useState('0');
-  const [pmModalVisible, setPmModalVisible] = useState(false);
-
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-
-  const fetchProfile = useCallback(async () => {
-    try {
-      // Fetch both profile and expenses in parallel to merge categories
-      const [profileData, expensesData] = await Promise.all([
-        apiService.getUserProfile().catch((err: any) => {
-          if (err.response?.status === 404 || (err.response?.data && typeof err.response.data === 'string' && err.response.data.includes('not found'))) {
-            return null;
-          }
-          throw err;
-        }),
-        apiService.getExpenses().catch((err: any) => {
-          console.warn('Failed to load expenses for categories:', err);
-          return [];
-        })
-      ]);
-
-      // Extract unique categories from logged expenses
-      const expenseCategories: string[] = Array.from(
-        new Set((expensesData || []).map((exp: any) => exp.expense_type?.trim().toLowerCase()))
-      ).filter(Boolean) as string[];
-
-      if (profileData) {
-        setProfileId(profileData.id);
-        setUserName(profileData.user_name || '');
-        setMonthlyIncome(String(profileData.monthly_income || '0'));
-        
-        // Merge profile expense types with actual categories from expenses
-        const profileCategories = (profileData.expense_types || []).map((c: string) => c.trim().toLowerCase());
-        const mergedCategories = Array.from(new Set([...profileCategories, ...expenseCategories]));
-        setCategories(mergedCategories);
-        setPaymentMethods(profileData.payment_methods || []);
-      } else {
-        // If no profile, use unique expense categories or fallback to default
-        if (expenseCategories.length > 0) {
-          setCategories(expenseCategories);
-        } else {
-          setCategories(['food', 'transport', 'housing', 'services', 'entertainment', 'other']);
-        }
-      }
-    } catch (err: any) {
-      console.error('Failed to load profile:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchProfile();
-  }, [fetchProfile]);
-
-  const handleSaveProfile = async () => {
-    if (!userName.trim()) {
-      Alert.alert('Validation Error', 'Please enter your display name.');
-      return;
-    }
-    if (!monthlyIncome || isNaN(Number(monthlyIncome))) {
-      Alert.alert('Validation Error', 'Please enter a valid monthly income.');
-      return;
-    }
-    if (categories.length === 0) {
-      Alert.alert('Validation Error', 'Please configure at least one category tag.');
-      return;
-    }
-    if (paymentMethods.length === 0) {
-      Alert.alert('Validation Error', 'Please configure at least one payment method.');
-      return;
-    }
-
-    setSaving(true);
-    
-    const payload = {
-      user_name: userName.trim(),
-      expense_types: categories,
-      payment_methods: paymentMethods,
-      monthly_income: parseFloat(monthlyIncome),
-    };
-
-    try {
-      if (profileId) {
-        // Update existing profile
-        await apiService.updateUserProfile(profileId, payload);
-      } else {
-        // Create new profile
-        await apiService.createUserProfile(payload);
-      }
-      
-      // Reload profile
-      await fetchProfile();
-      Alert.alert('Success', 'Profile saved successfully!');
-    } catch (err: any) {
-      console.error(err);
-      Alert.alert('Error', err.response?.data || err.message || 'Failed to save profile settings.');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleAddCategory = () => {
-    const cleanCat = newCategory.trim().toLowerCase();
-    if (!cleanCat) return;
-    if (categories.includes(cleanCat)) {
-      Alert.alert('Exists', 'This category is already added.');
-      return;
-    }
-    setCategories([...categories, cleanCat]);
-    setNewCategory('');
-  };
-
-  const handleRemoveCategory = (catToRemove: string) => {
-    setCategories(categories.filter(c => c !== catToRemove));
-  };
-
-  const handleAddPaymentMethod = () => {
-    if (!newPmName.trim()) {
-      Alert.alert('Required', 'Please specify a name.');
-      return;
-    }
-    
-    // Check uniqueness
-    if (paymentMethods.some(pm => pm.name.toLowerCase() === newPmName.trim().toLowerCase())) {
-      Alert.alert('Exists', 'A payment method with this name already exists.');
-      return;
-    }
-
-    const nextPm = {
-      id: Math.random().toString(36).substr(2, 9), // Temp client ID (backend handles stable ID)
-      name: newPmName.trim(),
-      is_immediate: newPmIsImmediate,
-      cut_date: newPmIsImmediate ? 0 : parseInt(newPmCutDate) || 1,
-      days_to_pay: newPmIsImmediate ? 0 : parseInt(newPmDaysToPay) || 0
-    };
-
-    setPaymentMethods([...paymentMethods, nextPm]);
-    
-    // Clear inputs and close modal
-    setNewPmName('');
-    setNewPmIsImmediate(true);
-    setNewPmCutDate('0');
-    setNewPmDaysToPay('0');
-    setPmModalVisible(false);
-  };
-
-  const handleRemovePaymentMethod = (id: string) => {
-    setPaymentMethods(paymentMethods.filter(pm => pm.id !== id));
-  };
+  const {
+    userName,
+    setUserName,
+    monthlyIncome,
+    setMonthlyIncome,
+    currency,
+    setCurrency,
+    categories,
+    newCategory,
+    setNewCategory,
+    paymentMethods,
+    newPmName,
+    setNewPmName,
+    newPmIsImmediate,
+    setNewPmIsImmediate,
+    newPmCutDate,
+    setNewPmCutDate,
+    newPmDaysToPay,
+    setNewPmDaysToPay,
+    pmModalVisible,
+    setPmModalVisible,
+    loading,
+    saving,
+    handleSaveProfile,
+    handleAddCategory,
+    handleRemoveCategory,
+    handleAddPaymentMethod,
+    handleRemovePaymentMethod,
+  } = useProfile();
 
   if (loading) {
     return (
@@ -241,7 +103,7 @@ export default function ProfileScreen() {
           </View>
 
           <View style={styles.formGroup}>
-            <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Monthly Income (USD)</Text>
+            <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Monthly Income</Text>
             <TextInput
               style={[styles.formInput, { color: colors.text, borderColor: colors.border }]}
               placeholder="e.g. 5000"
@@ -250,6 +112,34 @@ export default function ProfileScreen() {
               value={monthlyIncome}
               onChangeText={setMonthlyIncome}
             />
+          </View>
+
+          <View style={styles.formGroup}>
+            <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Currency Preference</Text>
+            <View style={styles.currencySelector}>
+              {['USD', 'MXN', 'EUR', 'GBP'].map((curr) => (
+                <TouchableOpacity
+                  key={curr}
+                  style={[
+                    styles.currencyOption,
+                    {
+                      borderColor: currency === curr ? colors.primary : colors.border,
+                      backgroundColor: currency === curr ? colors.primaryLight : 'transparent',
+                    },
+                  ]}
+                  onPress={() => setCurrency(curr)}
+                >
+                  <Text
+                    style={[
+                      styles.currencyOptionText,
+                      { color: currency === curr ? colors.primary : colors.textSecondary },
+                    ]}
+                  >
+                    {curr}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
           </View>
         </View>
 
@@ -429,213 +319,3 @@ export default function ProfileScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Platform.OS === 'ios' ? 60 : 30,
-    paddingBottom: Spacing.md,
-    borderBottomWidth: 1,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: '800',
-  },
-  saveButtonHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.md,
-    paddingVertical: 8,
-    borderRadius: 8,
-    gap: Spacing.xs,
-  },
-  saveButtonText: {
-    color: '#FFF',
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  scrollContent: {
-    padding: Spacing.lg,
-    paddingBottom: Spacing.xxl,
-    gap: Spacing.lg,
-  },
-  section: {
-    borderRadius: 20,
-    borderWidth: 1,
-    padding: Spacing.lg,
-  },
-  sectionHeaderRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: Spacing.md,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '800',
-    marginBottom: Spacing.md,
-  },
-  sectionSubtitle: {
-    fontSize: 12,
-    lineHeight: 16,
-    marginBottom: Spacing.md,
-  },
-  formGroup: {
-    marginBottom: Spacing.md,
-  },
-  formLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-    marginBottom: Spacing.xs,
-  },
-  formInput: {
-    borderWidth: 1,
-    borderRadius: 12,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Platform.OS === 'ios' ? 12 : 10,
-    fontSize: 14,
-    backgroundColor: 'rgba(255, 255, 255, 0.02)',
-  },
-  addTagContainer: {
-    flexDirection: 'row',
-    gap: Spacing.xs,
-    marginBottom: Spacing.md,
-  },
-  tagInput: {
-    flex: 1,
-    borderWidth: 1,
-    borderRadius: 12,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: 10,
-    fontSize: 14,
-    backgroundColor: 'rgba(255, 255, 255, 0.02)',
-  },
-  tagAddButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  chipsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.xs,
-  },
-  chip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingLeft: 12,
-    paddingRight: 8,
-    paddingVertical: 6,
-    borderRadius: 16,
-    borderWidth: 1,
-    gap: Spacing.xs,
-  },
-  chipText: {
-    fontSize: 12,
-    fontWeight: '700',
-    textTransform: 'lowercase',
-  },
-  addPmButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 6,
-    borderRadius: 8,
-    gap: Spacing.xs,
-  },
-  addPmButtonText: {
-    color: '#FFF',
-    fontSize: 11,
-    fontWeight: '700',
-  },
-  pmItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: Spacing.md,
-    borderBottomWidth: 1,
-  },
-  pmLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  pmName: {
-    fontSize: 14,
-    fontWeight: '700',
-    marginBottom: 2,
-  },
-  pmType: {
-    fontSize: 11,
-  },
-  emptyText: {
-    fontSize: 13,
-    textAlign: 'center',
-    paddingVertical: Spacing.md,
-  },
-  themeToggleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: Spacing.sm,
-  },
-  themeToggleLabel: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-  },
-  themeToggleText: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
-  },
-  modalContent: {
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-    maxHeight: '85%',
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: Spacing.lg,
-    borderBottomWidth: 1,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: '800',
-  },
-  formContent: {
-    padding: Spacing.lg,
-    paddingBottom: Spacing.xxl,
-  },
-  switchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: Spacing.xs,
-  },
-  saveButton: {
-    borderRadius: 12,
-    paddingVertical: 14,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: Spacing.lg,
-  },
-});

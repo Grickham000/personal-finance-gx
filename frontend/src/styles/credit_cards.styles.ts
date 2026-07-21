@@ -1,0 +1,408 @@
+import { StyleSheet, Platform } from 'react-native';
+import { Spacing } from '../constants/theme';
+
+export const getStyles = (colors: any) => StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  header: {
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Platform.OS === 'ios' ? 60 : 30,
+    paddingBottom: Spacing.md,
+    borderBottomWidth: 1,
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: '800',
+  },
+  subtitle: {
+    fontSize: 12,
+    marginTop: 2,
+    fontWeight: '500',
+  },
+  scrollContent: {
+    padding: Spacing.lg,
+    paddingBottom: Spacing.xxl * 2,
+  },
+  cardsSliderContent: {
+    gap: Spacing.md,
+    paddingRight: Spacing.lg,
+    paddingBottom: Spacing.md,
+  },
+  cardWrapper: {
+    width: 296,
+    borderRadius: 20,
+    overflow: 'hidden',
+  },
+  virtualCard: {
+    borderRadius: 20,
+    padding: Spacing.lg,
+    height: 180,
+    justifyContent: 'space-between',
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  cardIconBox: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  cardLogo: {
+    color: '#FFF',
+    fontSize: 10,
+    fontWeight: '900',
+    letterSpacing: 2,
+    opacity: 0.8,
+  },
+  cardName: {
+    color: '#FFF',
+    fontSize: 17,
+    fontWeight: '800',
+    marginTop: Spacing.md,
+  },
+  cardMetadata: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  cardMetaLabel: {
+    color: 'rgba(255, 255, 255, 0.5)',
+    fontSize: 8,
+    fontWeight: '700',
+    letterSpacing: 1,
+    marginBottom: 2,
+  },
+  cardMetaValue: {
+    color: '#FFF',
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  cardStatusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 12,
+    alignSelf: 'flex-start',
+    marginTop: Spacing.xs,
+  },
+  statusIndicatorDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    marginRight: 6,
+  },
+  cardStatusText: {
+    color: '#FFF',
+    fontSize: 9,
+    fontWeight: '700',
+  },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'baseline',
+    marginTop: Spacing.xl,
+    marginBottom: Spacing.md,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+  },
+  sectionDetail: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  statementBox: {
+    borderWidth: 1,
+    borderRadius: 20,
+    padding: Spacing.md,
+    marginBottom: Spacing.md,
+  },
+  statementHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: Spacing.md,
+  },
+  stmtMonthName: {
+    fontSize: 15,
+    fontWeight: '800',
+  },
+  stmtPeriodText: {
+    fontSize: 11,
+    marginTop: 2,
+    fontWeight: '500',
+  },
+  stmtBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    gap: 4,
+  },
+  stmtBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  stmtSummaryRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingBottom: Spacing.md,
+    borderBottomWidth: 1,
+    marginBottom: Spacing.sm,
+  },
+  summaryItem: {
+    flex: 1,
+  },
+  summaryLabel: {
+    fontSize: 10,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  summaryValue: {
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  stmtFooterRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  stmtDueDateContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+  },
+  stmtDueDateText: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  footerActionButtons: {
+    flexDirection: 'row',
+    gap: Spacing.xs,
+  },
+  payButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 8,
+  },
+  payButtonText: {
+    color: '#FFF',
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  detailsToggleButton: {
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  detailsToggleText: {
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  expensesCollapseContainer: {
+    borderTopWidth: 1,
+    marginTop: Spacing.md,
+    paddingTop: Spacing.sm,
+    gap: Spacing.sm,
+  },
+  expenseCollapseItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 4,
+  },
+  expItemLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    marginRight: Spacing.sm,
+  },
+  expItemDesc: {
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  expItemDate: {
+    fontSize: 10,
+    marginTop: 2,
+  },
+  expItemAmount: {
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  paymentsCardLog: {
+    borderRadius: 20,
+    borderWidth: 1,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xs,
+  },
+  paymentLogItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: Spacing.md,
+    borderBottomWidth: 1,
+  },
+  payLogLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  payLogIconBox: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: Spacing.sm,
+  },
+  payLogAmount: {
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  payLogDate: {
+    fontSize: 11,
+    marginTop: 2,
+  },
+  payLogRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.md,
+  },
+  payLogAmountValue: {
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  deletePaymentLogButton: {
+    padding: 4,
+  },
+  emptyContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: Spacing.xl,
+    gap: Spacing.xs,
+  },
+  emptyText: {
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  emptySetupContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: Spacing.xxl,
+  },
+  emptySetupIcon: {
+    width: 88,
+    height: 88,
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: Spacing.lg,
+  },
+  emptySetupTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    marginBottom: Spacing.xs,
+  },
+  emptySetupSub: {
+    fontSize: 13,
+    lineHeight: 18,
+    textAlign: 'center',
+    marginBottom: Spacing.xl,
+  },
+  setupButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: 12,
+    borderRadius: 12,
+    gap: Spacing.xs,
+  },
+  setupButtonText: {
+    color: '#FFF',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    maxHeight: '75%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: Spacing.lg,
+    borderBottomWidth: 1,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+  },
+  modalSubtitle: {
+    fontSize: 11,
+    marginTop: 2,
+    fontWeight: '600',
+  },
+  formContent: {
+    padding: Spacing.lg,
+    paddingBottom: Spacing.xxl,
+  },
+  formGroup: {
+    marginBottom: Spacing.md,
+  },
+  formLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    marginBottom: Spacing.xs,
+  },
+  formInput: {
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Platform.OS === 'ios' ? 12 : 10,
+    fontSize: 14,
+    backgroundColor: 'rgba(255, 255, 255, 0.02)',
+  },
+  saveButton: {
+    borderRadius: 12,
+    paddingVertical: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: Spacing.md,
+  },
+  saveButtonText: {
+    color: '#FFF',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  formError: {
+    color: '#EF4444',
+    fontSize: 13,
+    fontWeight: '600',
+    textAlign: 'center',
+    marginVertical: Spacing.sm,
+    paddingHorizontal: Spacing.lg,
+  },
+});
