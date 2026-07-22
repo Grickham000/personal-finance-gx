@@ -155,29 +155,32 @@ export const getStyles = (colors: any) => StyleSheet.create({
     fontSize: 10,
     fontWeight: '700',
   },
-  stmtSummaryRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingBottom: Spacing.md,
-    borderBottomWidth: 1,
-    marginBottom: Spacing.sm,
+  stmtVerticalDetails: {
+    borderWidth: 1,
+    borderRadius: 14,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 2,
+    marginBottom: Spacing.md,
   },
-  summaryItem: {
-    flex: 1,
-  },
-  summaryLabel: {
-    fontSize: 10,
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  summaryValue: {
-    fontSize: 14,
-    fontWeight: '800',
-  },
-  stmtFooterRow: {
+  stmtDetailRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    paddingVertical: 10,
+  },
+  stmtDetailLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  stmtDetailValue: {
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  stmtFooterRow: {
+    flexDirection: 'column',
+    alignItems: 'stretch',
+    gap: Spacing.sm,
+    marginTop: Spacing.xs,
   },
   stmtDueDateContainer: {
     flexDirection: 'row',
@@ -190,7 +193,8 @@ export const getStyles = (colors: any) => StyleSheet.create({
   },
   footerActionButtons: {
     flexDirection: 'row',
-    gap: Spacing.xs,
+    justifyContent: 'flex-end',
+    gap: Spacing.sm,
   },
   payButton: {
     paddingHorizontal: 12,

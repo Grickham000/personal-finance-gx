@@ -255,22 +255,24 @@ export default function CreditCardsScreen() {
                 </View>
               </View>
 
-              <View style={[styles.stmtSummaryRow, { borderBottomColor: colors.border }]}>
-                <View style={styles.summaryItem}>
-                  <Text style={[styles.summaryLabel, { color: colors.textMuted }]} numberOfLines={1}>Statement Bal</Text>
-                  <Text style={[styles.summaryValue, { color: colors.text }]} numberOfLines={1}>
+              <View style={[styles.stmtVerticalDetails, { borderColor: colors.border }]}>
+                <View style={styles.stmtDetailRow}>
+                  <Text style={[styles.stmtDetailLabel, { color: colors.textMuted }]}>Statement Balance</Text>
+                  <Text style={[styles.stmtDetailValue, { color: colors.text }]}>
                     {formatCurrency(stmt.totalSpent, profile?.currency)}
                   </Text>
                 </View>
-                <View style={[styles.summaryItem, { alignItems: 'center' }]}>
-                  <Text style={[styles.summaryLabel, { color: colors.textMuted }]} numberOfLines={1}>Amount Paid</Text>
-                  <Text style={[styles.summaryValue, { color: colors.success }]} numberOfLines={1}>
+                
+                <View style={[styles.stmtDetailRow, { borderTopWidth: 1, borderTopColor: colors.border }]}>
+                  <Text style={[styles.stmtDetailLabel, { color: colors.textMuted }]}>Amount Paid</Text>
+                  <Text style={[styles.stmtDetailValue, { color: colors.success }]}>
                     {formatCurrency(stmt.totalPaid, profile?.currency)}
                   </Text>
                 </View>
-                <View style={[styles.summaryItem, { alignItems: 'flex-end' }]}>
-                  <Text style={[styles.summaryLabel, { color: colors.textMuted }]} numberOfLines={1}>Remaining</Text>
-                  <Text style={[styles.summaryValue, { color: stmt.remainingBalance > 0 ? colors.danger : colors.text }]} numberOfLines={1}>
+                
+                <View style={[styles.stmtDetailRow, { borderTopWidth: 1, borderTopColor: colors.border }]}>
+                  <Text style={[styles.stmtDetailLabel, { color: colors.textMuted }]}>Remaining Balance</Text>
+                  <Text style={[styles.stmtDetailValue, { color: stmt.remainingBalance > 0 ? colors.danger : colors.text }]}>
                     {formatCurrency(stmt.remainingBalance, profile?.currency)}
                   </Text>
                 </View>
