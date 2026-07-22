@@ -257,20 +257,20 @@ export default function CreditCardsScreen() {
 
               <View style={[styles.stmtSummaryRow, { borderBottomColor: colors.border }]}>
                 <View style={styles.summaryItem}>
-                  <Text style={[styles.summaryLabel, { color: colors.textMuted }]}>Statement Bal</Text>
-                  <Text style={[styles.summaryValue, { color: colors.text }]}>
+                  <Text style={[styles.summaryLabel, { color: colors.textMuted }]} numberOfLines={1}>Statement Bal</Text>
+                  <Text style={[styles.summaryValue, { color: colors.text }]} numberOfLines={1}>
                     {formatCurrency(stmt.totalSpent, profile?.currency)}
                   </Text>
                 </View>
-                <View style={styles.summaryItem}>
-                  <Text style={[styles.summaryLabel, { color: colors.textMuted }]}>Amount Paid</Text>
-                  <Text style={[styles.summaryValue, { color: colors.success }]}>
+                <View style={[styles.summaryItem, { alignItems: 'center' }]}>
+                  <Text style={[styles.summaryLabel, { color: colors.textMuted }]} numberOfLines={1}>Amount Paid</Text>
+                  <Text style={[styles.summaryValue, { color: colors.success }]} numberOfLines={1}>
                     {formatCurrency(stmt.totalPaid, profile?.currency)}
                   </Text>
                 </View>
-                <View style={styles.summaryItem}>
-                  <Text style={[styles.summaryLabel, { color: colors.textMuted }]}>Remaining</Text>
-                  <Text style={[styles.summaryValue, { color: stmt.remainingBalance > 0 ? colors.danger : colors.text }]}>
+                <View style={[styles.summaryItem, { alignItems: 'flex-end' }]}>
+                  <Text style={[styles.summaryLabel, { color: colors.textMuted }]} numberOfLines={1}>Remaining</Text>
+                  <Text style={[styles.summaryValue, { color: stmt.remainingBalance > 0 ? colors.danger : colors.text }]} numberOfLines={1}>
                     {formatCurrency(stmt.remainingBalance, profile?.currency)}
                   </Text>
                 </View>
