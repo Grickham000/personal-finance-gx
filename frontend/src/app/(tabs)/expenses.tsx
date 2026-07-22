@@ -45,6 +45,8 @@ export default function ExpensesScreen() {
     description,
     setDescription,
     formError,
+    isUnexpectedIncome,
+    setIsUnexpectedIncome,
     handleAddVariableExpense,
     handleDeleteVariableExpense,
 
@@ -186,8 +188,11 @@ export default function ExpensesScreen() {
                   </View>
                 </View>
                 <View style={styles.expenseRight}>
-                  <Text style={[styles.expenseAmount, { color: colors.danger }]}>
-                    -{formatCurrency(item.expense, profile?.currency)}
+                  <Text 
+                    style={[styles.expenseAmount, { color: item.expense < 0 ? colors.success : colors.danger }]}
+                    numberOfLines={1}
+                  >
+                    {item.expense < 0 ? '+' : '-'}{formatCurrency(Math.abs(item.expense), profile?.currency)}
                   </Text>
                   <TouchableOpacity 
                     style={styles.deleteButton}
@@ -228,8 +233,11 @@ export default function ExpensesScreen() {
                 </View>
               </View>
               <View style={styles.expenseRight}>
-                <Text style={[styles.expenseAmount, { color: colors.danger }]}>
-                  -{formatCurrency(item.fixed_expense, profile?.currency)}
+                <Text 
+                  style={[styles.expenseAmount, { color: item.fixed_expense < 0 ? colors.success : colors.danger }]}
+                  numberOfLines={1}
+                >
+                  {item.fixed_expense < 0 ? '+' : '-'}{formatCurrency(Math.abs(item.fixed_expense), profile?.currency)}
                 </Text>
                 <View style={styles.actionButtons}>
                   <TouchableOpacity 
@@ -334,6 +342,19 @@ export default function ExpensesScreen() {
                     </TouchableOpacity>
                   ))}
                 </View>
+              </View>
+
+              <View style={[styles.formGroup, styles.switchContainer]}>
+                <View style={{ flex: 1, marginRight: Spacing.sm }}>
+                  <Text style={[styles.formLabel, { color: colors.textSecondary, marginBottom: 0 }]}>Unexpected Income / Refund?</Text>
+                  <Text style={{ fontSize: 11, color: colors.textMuted }}>Toggle if this transaction represents a refund or unexpected incoming funds.</Text>
+                </View>
+                <Switch 
+                  value={isUnexpectedIncome}
+                  onValueChange={setIsUnexpectedIncome}
+                  trackColor={{ false: colors.border, true: colors.primary }}
+                  thumbColor="#FFF"
+                />
               </View>
 
               <TouchableOpacity 

@@ -183,8 +183,11 @@ export default function DashboardScreen() {
                     </Text>
                   </View>
                 </View>
-                <Text style={[styles.txAmount, { color: colors.danger }]}>
-                  -{formatCurrency(item.expense, profile?.currency)}
+                <Text 
+                  style={[styles.txAmount, { color: item.expense < 0 ? colors.success : colors.danger }]}
+                  numberOfLines={1}
+                >
+                  {item.expense < 0 ? '+' : '-'}{formatCurrency(Math.abs(item.expense), profile?.currency)}
                 </Text>
               </View>
             ))

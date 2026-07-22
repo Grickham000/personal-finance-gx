@@ -24,6 +24,7 @@ export const useExpenses = () => {
   const [paymentMethodName, setPaymentMethodName] = useState('');
   const [description, setDescription] = useState('');
   const [formError, setFormError] = useState('');
+  const [isUnexpectedIncome, setIsUnexpectedIncome] = useState(false);
 
   // Form states (Fixed Modal)
   const [fixedModalVisible, setFixedModalVisible] = useState(false);
@@ -80,8 +81,9 @@ export const useExpenses = () => {
   // --- Variable Expenses Actions ---
 
   const handleAddVariableExpense = async () => {
-    if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) {
-      setFormError('Please enter a valid amount.');
+    const val = Number(amount);
+    if (!amount || isNaN(val) || val === 0) {
+      setFormError('Please enter a valid non-zero amount.');
       return;
     }
     if (!category) {
@@ -103,8 +105,11 @@ export const useExpenses = () => {
     const selectedPM = profile?.payment_methods?.find((pm: any) => pm.name === paymentMethodName);
 
     try {
+      const parsedAmount = parseFloat(amount);
+      const finalAmount = isUnexpectedIncome ? -Math.abs(parsedAmount) : parsedAmount;
+
       const newExpense = {
-        expense: parseFloat(amount),
+        expense: finalAmount,
         expense_type: category,
         payment_method: paymentMethodName,
         expense_description: description.trim(),
@@ -117,6 +122,7 @@ export const useExpenses = () => {
       
       setAmount('');
       setDescription('');
+      setIsUnexpectedIncome(false);
       setVariableModalVisible(false);
       setLoading(true);
       await fetchData();
@@ -306,6 +312,8 @@ export const useExpenses = () => {
     description,
     setDescription,
     formError,
+    isUnexpectedIncome,
+    setIsUnexpectedIncome,
     handleAddVariableExpense,
     handleDeleteVariableExpense,
 

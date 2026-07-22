@@ -132,6 +132,6 @@ def delete_fixed_expense(req : func.HttpRequest) -> func.HttpResponse:
         else:
             return func.HttpResponse(f"Not authorized",status_code=401)
 
-        return func.HttpResponse(f"Fixed Expense deleted successfully",status_code=404)
+        return func.HttpResponse(f"Fixed Expense deleted successfully", status_code=200)
     except Exception as e:
-        return func.HttpResponse(f"Failed to update fixed expense: {str(e)}",status_code=400)
+        return func.HttpResponse(f"Failed to delete fixed expense: {str(e)}", status_code=400)

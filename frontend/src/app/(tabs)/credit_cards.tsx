@@ -322,8 +322,11 @@ export default function CreditCardsScreen() {
                           </Text>
                         </View>
                       </View>
-                      <Text style={[styles.expItemAmount, { color: colors.text }]}>
-                        -{formatCurrency(exp.expense, profile?.currency)}
+                      <Text 
+                        style={[styles.expItemAmount, { color: exp.expense < 0 ? colors.success : colors.text }]}
+                        numberOfLines={1}
+                      >
+                        {exp.expense < 0 ? '+' : '-'}{formatCurrency(Math.abs(exp.expense), profile?.currency)}
                       </Text>
                     </View>
                   ))}

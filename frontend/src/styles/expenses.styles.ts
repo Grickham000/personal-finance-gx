@@ -84,14 +84,15 @@ export const getStyles = (colors: any) => StyleSheet.create({
   expenseItem: {
     borderRadius: 16,
     borderWidth: 1,
-    padding: Spacing.md,
+    paddingVertical: 18,
+    paddingHorizontal: Spacing.lg,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
   expenseInfo: {
     flex: 1,
-    marginRight: Spacing.md,
+    marginRight: 28,
   },
   expenseDesc: {
     fontSize: 15,
@@ -101,7 +102,8 @@ export const getStyles = (colors: any) => StyleSheet.create({
   metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.xs,
+    flexWrap: 'wrap',
+    gap: Spacing.sm,
   },
   categoryBadge: {
     fontSize: 10,
@@ -118,6 +120,7 @@ export const getStyles = (colors: any) => StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.md,
+    flexShrink: 0,
   },
   expenseAmount: {
     fontSize: 16,
