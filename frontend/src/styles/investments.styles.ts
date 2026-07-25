@@ -82,24 +82,36 @@ export const getStyles = (colors: any) => StyleSheet.create({
   assetItem: {
     borderRadius: 16,
     borderWidth: 1,
-    padding: Spacing.md,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  assetLeft: {
-    flex: 1,
-    marginRight: Spacing.md,
+    paddingVertical: 16,
+    paddingHorizontal: Spacing.lg,
+    flexDirection: 'column',
+    alignItems: 'stretch',
+    gap: 8,
   },
   assetName: {
     fontSize: 15,
     fontWeight: '700',
-    marginBottom: 4,
   },
-  assetMeta: {
+  assetAmountLarge: {
+    fontSize: 20,
+    fontWeight: '900',
+  },
+  cardDivider: {
+    height: 1,
+    opacity: 0.3,
+  },
+  assetFooterRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: Spacing.md,
+  },
+  assetMetaVertical: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.xs,
+    flexWrap: 'wrap',
+    gap: Spacing.sm,
+    flex: 1,
   },
   assetMetaText: {
     fontSize: 11,
@@ -107,15 +119,6 @@ export const getStyles = (colors: any) => StyleSheet.create({
   },
   assetDesc: {
     fontSize: 11,
-  },
-  assetRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.md,
-  },
-  assetAmount: {
-    fontSize: 16,
-    fontWeight: '800',
   },
   deleteButton: {
     padding: 4,

@@ -170,25 +170,24 @@ export default function DashboardScreen() {
                 key={item.id} 
                 style={[styles.transactionItem, { borderBottomColor: colors.border }]}
               >
-                <View style={styles.txLeft}>
-                  <View style={[styles.txIconContainer, { backgroundColor: colors.primaryLight }]}>
-                    <ArrowUpRight size={18} color={colors.primary} />
-                  </View>
-                  <View>
-                    <Text style={[styles.txName, { color: colors.text }]} numberOfLines={1}>
-                      {item.expense_description || item.expense_type}
-                    </Text>
-                    <Text style={[styles.txDate, { color: colors.textSecondary }]}>
-                      {formatDate(item.expense_date)} • {item.payment_method}
-                    </Text>
-                  </View>
-                </View>
+                <Text style={[styles.txName, { color: colors.text }]} numberOfLines={1}>
+                  {item.expense_description || item.expense_type}
+                </Text>
+                
                 <Text 
-                  style={[styles.txAmount, { color: item.expense < 0 ? colors.success : colors.danger }]}
-                  numberOfLines={1}
+                  style={[styles.txAmountLarge, { color: item.expense < 0 ? colors.success : colors.danger }]}
                 >
                   {item.expense < 0 ? '+' : '-'}{formatCurrency(Math.abs(item.expense), profile?.currency)}
                 </Text>
+                
+                <View style={styles.txMetaRow}>
+                  <View style={[styles.txIconContainer, { backgroundColor: colors.primaryLight }]}>
+                    <ArrowUpRight size={12} color={colors.primary} />
+                  </View>
+                  <Text style={[styles.txDate, { color: colors.textSecondary }]}>
+                    {formatDate(item.expense_date)} • {item.payment_method}
+                  </Text>
+                </View>
               </View>
             ))
           )}

@@ -226,28 +226,27 @@ export const getStyles = (colors: any) => StyleSheet.create({
     gap: Spacing.sm,
   },
   expenseCollapseItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 4,
-  },
-  expItemLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-    marginRight: Spacing.sm,
+    flexDirection: 'column',
+    alignItems: 'stretch',
+    paddingVertical: 8,
+    borderBottomWidth: 0.5,
+    gap: 4,
   },
   expItemDesc: {
     fontSize: 13,
     fontWeight: '700',
   },
+  expItemAmountLarge: {
+    fontSize: 15,
+    fontWeight: '900',
+  },
+  expItemMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+  },
   expItemDate: {
     fontSize: 10,
-    marginTop: 2,
-  },
-  expItemAmount: {
-    fontSize: 13,
-    fontWeight: '800',
   },
   paymentsCardLog: {
     borderRadius: 20,

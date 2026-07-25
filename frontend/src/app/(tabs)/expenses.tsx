@@ -174,11 +174,18 @@ export default function ExpensesScreen() {
             }
             renderItem={({ item }) => (
               <View style={[styles.expenseItem, { backgroundColor: colors.card, borderColor: colors.border }, Shadows.sm]}>
-                <View style={styles.expenseInfo}>
-                  <Text style={[styles.expenseDesc, { color: colors.text }]} numberOfLines={1}>
-                    {item.expense_description}
-                  </Text>
-                  <View style={styles.metaRow}>
+                <Text style={[styles.expenseDesc, { color: colors.text }]} numberOfLines={1}>
+                  {item.expense_description}
+                </Text>
+                
+                <Text style={[styles.expenseAmountLarge, { color: item.expense < 0 ? colors.success : colors.danger }]}>
+                  {item.expense < 0 ? '+' : '-'}{formatCurrency(Math.abs(item.expense), profile?.currency)}
+                </Text>
+
+                <View style={[styles.cardDivider, { backgroundColor: colors.border }]} />
+                
+                <View style={styles.expenseFooterRow}>
+                  <View style={styles.metaRowVertical}>
                     <Text style={[styles.categoryBadge, { backgroundColor: colors.primaryLight, color: colors.primary }]}>
                       {item.expense_type}
                     </Text>
@@ -186,14 +193,6 @@ export default function ExpensesScreen() {
                       {formatDate(item.expense_date)} • {item.payment_method}
                     </Text>
                   </View>
-                </View>
-                <View style={styles.expenseRight}>
-                  <Text 
-                    style={[styles.expenseAmount, { color: item.expense < 0 ? colors.success : colors.danger }]}
-                    numberOfLines={1}
-                  >
-                    {item.expense < 0 ? '+' : '-'}{formatCurrency(Math.abs(item.expense), profile?.currency)}
-                  </Text>
                   <TouchableOpacity 
                     style={styles.deleteButton}
                     onPress={() => handleDeleteVariableExpense(item.id)}
@@ -219,11 +218,18 @@ export default function ExpensesScreen() {
           }
           renderItem={({ item }) => (
             <View style={[styles.expenseItem, { backgroundColor: colors.card, borderColor: colors.border }, Shadows.sm]}>
-              <View style={styles.expenseInfo}>
-                <Text style={[styles.expenseDesc, { color: colors.text }]} numberOfLines={1}>
-                  {item.fexpense_description}
-                </Text>
-                <View style={styles.metaRow}>
+              <Text style={[styles.expenseDesc, { color: colors.text }]} numberOfLines={1}>
+                {item.fexpense_description}
+              </Text>
+              
+              <Text style={[styles.expenseAmountLarge, { color: item.fixed_expense < 0 ? colors.success : colors.danger }]}>
+                {item.fixed_expense < 0 ? '+' : '-'}{formatCurrency(Math.abs(item.fixed_expense), profile?.currency)}
+              </Text>
+
+              <View style={[styles.cardDivider, { backgroundColor: colors.border }]} />
+
+              <View style={styles.expenseFooterRow}>
+                <View style={styles.metaRowVertical}>
                   <Text style={[styles.categoryBadge, { backgroundColor: colors.primaryLight, color: colors.primary }]}>
                     {item.fexpense_type}
                   </Text>
@@ -231,14 +237,6 @@ export default function ExpensesScreen() {
                     Starts: {formatDate(item.fexpense_start_date)} • Ends: {formatDate(item.fexpense_end_date)}
                   </Text>
                 </View>
-              </View>
-              <View style={styles.expenseRight}>
-                <Text 
-                  style={[styles.expenseAmount, { color: item.fixed_expense < 0 ? colors.success : colors.danger }]}
-                  numberOfLines={1}
-                >
-                  {item.fixed_expense < 0 ? '+' : '-'}{formatCurrency(Math.abs(item.fixed_expense), profile?.currency)}
-                </Text>
                 <View style={styles.actionButtons}>
                   <TouchableOpacity 
                     style={styles.actionButton}

@@ -133,9 +133,16 @@ export default function InvestmentsScreen() {
                   key={item.id} 
                   style={[styles.assetItem, { backgroundColor: colors.card, borderColor: colors.border }, Shadows.sm]}
                 >
-                  <View style={styles.assetLeft}>
-                    <Text style={[styles.assetName, { color: colors.text }]}>{item.name}</Text>
-                    <View style={styles.assetMeta}>
+                  <Text style={[styles.assetName, { color: colors.text }]}>{item.name}</Text>
+                  
+                  <Text style={[styles.assetAmountLarge, { color: colors.text }]}>
+                    {formatCurrency(item.balance, profile?.currency)}
+                  </Text>
+
+                  <View style={[styles.cardDivider, { backgroundColor: colors.border }]} />
+
+                  <View style={styles.assetFooterRow}>
+                    <View style={styles.assetMetaVertical}>
                       <Percent size={12} color={colors.success} />
                       <Text style={[styles.assetMetaText, { color: colors.success }]}>
                         {item.interest_rate}% APY
@@ -146,11 +153,6 @@ export default function InvestmentsScreen() {
                         </Text>
                       ) : null}
                     </View>
-                  </View>
-                  <View style={styles.assetRight}>
-                    <Text style={[styles.assetAmount, { color: colors.text }]}>
-                      {formatCurrency(item.balance, profile?.currency)}
-                    </Text>
                     <TouchableOpacity 
                       style={styles.deleteButton} 
                       onPress={() => handleDeleteSavings(item.id, item.name)}
@@ -187,9 +189,16 @@ export default function InvestmentsScreen() {
                   key={item.id} 
                   style={[styles.assetItem, { backgroundColor: colors.card, borderColor: colors.border }, Shadows.sm]}
                 >
-                  <View style={styles.assetLeft}>
-                    <Text style={[styles.assetName, { color: colors.text }]}>{item.name}</Text>
-                    <View style={styles.assetMeta}>
+                  <Text style={[styles.assetName, { color: colors.text }]}>{item.name}</Text>
+                  
+                  <Text style={[styles.assetAmountLarge, { color: colors.text }]}>
+                    {formatCurrency(item.amount, profile?.currency)}
+                  </Text>
+
+                  <View style={[styles.cardDivider, { backgroundColor: colors.border }]} />
+
+                  <View style={styles.assetFooterRow}>
+                    <View style={styles.assetMetaVertical}>
                       <Percent size={12} color={colors.success} />
                       <Text style={[styles.assetMetaText, { color: colors.success }]}>
                         {item.interest_rate}% Yield
@@ -200,11 +209,6 @@ export default function InvestmentsScreen() {
                         </Text>
                       )}
                     </View>
-                  </View>
-                  <View style={styles.assetRight}>
-                    <Text style={[styles.assetAmount, { color: colors.text }]}>
-                      {formatCurrency(item.amount, profile?.currency)}
-                    </Text>
                     <TouchableOpacity 
                       style={styles.deleteButton} 
                       onPress={() => handleDeleteInvestment(item.id, item.name)}

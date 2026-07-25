@@ -84,26 +84,36 @@ export const getStyles = (colors: any) => StyleSheet.create({
   expenseItem: {
     borderRadius: 16,
     borderWidth: 1,
-    paddingVertical: 18,
+    paddingVertical: 16,
     paddingHorizontal: Spacing.lg,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  expenseInfo: {
-    flex: 1,
-    marginRight: 28,
+    flexDirection: 'column',
+    alignItems: 'stretch',
+    gap: 8,
   },
   expenseDesc: {
     fontSize: 15,
     fontWeight: '700',
-    marginBottom: 4,
   },
-  metaRow: {
+  expenseAmountLarge: {
+    fontSize: 20,
+    fontWeight: '900',
+  },
+  cardDivider: {
+    height: 1,
+    opacity: 0.3,
+  },
+  expenseFooterRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: Spacing.md,
+  },
+  metaRowVertical: {
     flexDirection: 'row',
     alignItems: 'center',
     flexWrap: 'wrap',
     gap: Spacing.sm,
+    flex: 1,
   },
   categoryBadge: {
     fontSize: 10,
@@ -115,16 +125,6 @@ export const getStyles = (colors: any) => StyleSheet.create({
   },
   metaText: {
     fontSize: 11,
-  },
-  expenseRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.md,
-    flexShrink: 0,
-  },
-  expenseAmount: {
-    fontSize: 16,
-    fontWeight: '800',
   },
   actionButtons: {
     flexDirection: 'row',

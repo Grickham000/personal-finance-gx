@@ -313,23 +313,22 @@ export default function CreditCardsScreen() {
                 <View style={[styles.expensesCollapseContainer, { borderTopColor: colors.border }]}>
                   {stmt.expenses.map((exp) => (
                     <View key={exp.id} style={styles.expenseCollapseItem}>
-                      <View style={styles.expItemLeft}>
-                        <ArrowDownRight size={14} color={colors.danger} />
-                        <View style={{ marginLeft: Spacing.sm }}>
-                          <Text style={[styles.expItemDesc, { color: colors.text }]} numberOfLines={1}>
-                            {exp.expense_description}
-                          </Text>
-                          <Text style={[styles.expItemDate, { color: colors.textSecondary }]}>
-                            {formatRawDate(exp.expense_date)} • {exp.expense_type}
-                          </Text>
-                        </View>
-                      </View>
+                      <Text style={[styles.expItemDesc, { color: colors.text }]} numberOfLines={1}>
+                        {exp.expense_description}
+                      </Text>
+                      
                       <Text 
-                        style={[styles.expItemAmount, { color: exp.expense < 0 ? colors.success : colors.text }]}
-                        numberOfLines={1}
+                        style={[styles.expItemAmountLarge, { color: exp.expense < 0 ? colors.success : colors.text }]}
                       >
                         {exp.expense < 0 ? '+' : '-'}{formatCurrency(Math.abs(exp.expense), profile?.currency)}
                       </Text>
+                      
+                      <View style={styles.expItemMetaRow}>
+                        <ArrowDownRight size={12} color={colors.danger} />
+                        <Text style={[styles.expItemDate, { color: colors.textSecondary }]}>
+                          {formatRawDate(exp.expense_date)} • {exp.expense_type}
+                        </Text>
+                      </View>
                     </View>
                   ))}
                 </View>

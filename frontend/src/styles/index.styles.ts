@@ -167,37 +167,35 @@ export const getStyles = (colors: Record<ThemeColor, string>) => StyleSheet.crea
     paddingVertical: Spacing.sm,
   },
   transactionItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: 'column',
+    alignItems: 'stretch',
     paddingVertical: Spacing.md,
     borderBottomWidth: 1,
-  },
-  txLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  txIconContainer: {
-    width: 38,
-    height: 38,
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: Spacing.md,
+    gap: 6,
   },
   txName: {
     fontSize: 14,
     fontWeight: '700',
-    marginBottom: 2,
-    maxWidth: 180,
+  },
+  txAmountLarge: {
+    fontSize: 18,
+    fontWeight: '900',
+  },
+  txMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+  },
+  txIconContainer: {
+    width: 24,
+    height: 24,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: Spacing.xs,
   },
   txDate: {
     fontSize: 12,
-  },
-  txAmount: {
-    fontSize: 15,
-    fontWeight: '700',
   },
   emptyContainer: {
     alignItems: 'center',
