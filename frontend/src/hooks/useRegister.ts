@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { apiService } from '../services/api';
+import { extractErrorMessage } from '../utils/errors';
 
 export const useRegister = () => {
   const [email, setEmail] = useState('');
@@ -34,7 +35,7 @@ export const useRegister = () => {
       setRegistered(true);
     } catch (err: any) {
       console.error(err);
-      const errMsg = err.response?.data || err.message || 'An error occurred during registration.';
+      const errMsg = extractErrorMessage(err);
       if (errMsg.includes('EMAIL_EXISTS')) {
         setError('This email address is already registered.');
       } else {

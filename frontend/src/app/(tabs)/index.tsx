@@ -6,8 +6,8 @@ import {
   TouchableOpacity, 
   ActivityIndicator, 
   RefreshControl,
-  SafeAreaView
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';

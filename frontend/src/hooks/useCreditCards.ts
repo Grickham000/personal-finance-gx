@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Alert } from 'react-native';
 import { apiService } from '../services/api';
+import { extractErrorMessage } from '../utils/errors';
 
 export interface CardStatement {
   statementMonth: string; // YYYY-MM
@@ -207,7 +208,7 @@ export const useCreditCards = () => {
       Alert.alert('Success', 'Card statement payment logged successfully!');
     } catch (err: any) {
       console.error(err);
-      setPaymentError(err.response?.data || err.message || 'Failed to save card payment.');
+      setPaymentError(extractErrorMessage(err));
     } finally {
       setSubmittingPayment(false);
     }

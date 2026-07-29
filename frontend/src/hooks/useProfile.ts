@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Alert } from 'react-native';
 import { apiService } from '../services/api';
+import { extractErrorMessage } from '../utils/errors';
 
 export const useProfile = () => {
   const [profileId, setProfileId] = useState<string | null>(null);
@@ -105,7 +106,7 @@ export const useProfile = () => {
       Alert.alert('Success', 'Profile saved successfully!');
     } catch (err: any) {
       console.error(err);
-      Alert.alert('Error', err.response?.data || err.message || 'Failed to save profile settings.');
+      Alert.alert('Error', extractErrorMessage(err));
     } finally {
       setSaving(false);
     }

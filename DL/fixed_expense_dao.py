@@ -7,10 +7,29 @@ class FixedExpenseDAO:
     def __init__(self):
         self.db = firestore.client()
 
+    def _parse_date(self, date_val):
+        if not date_val:
+            return None
+        if isinstance(date_val, (datetime, date)):
+            return date_val
+        if isinstance(date_val, str):
+            try:
+                clean_val = date_val.replace("Z", "+00:00")
+                return datetime.fromisoformat(clean_val)
+            except ValueError:
+                try:
+                    return datetime.strptime(date_val, "%Y-%m-%d %H:%M:%S")
+                except ValueError:
+                    try:
+                        return datetime.strptime(date_val, "%Y-%m-%d")
+                    except ValueError:
+                        return date_val
+        return date_val
+
     def create_fixed_expense(self, fixed_expense_entity: FixedExpenseEntity) -> str:
         # Parse the string to a datetime object
-        fixed_expense_entity.fexpense_start_date = datetime.fromisoformat(fixed_expense_entity.fexpense_start_date.replace("Z", "+00:00"))
-        fixed_expense_entity.fexpense_end_date = datetime.fromisoformat(fixed_expense_entity.fexpense_end_date.replace("Z", "+00:00"))
+        fixed_expense_entity.fexpense_start_date = self._parse_date(fixed_expense_entity.fexpense_start_date)
+        fixed_expense_entity.fexpense_end_date = self._parse_date(fixed_expense_entity.fexpense_end_date)
 
         expense_ref = self.db.collection('fixed_expenses').add(fixed_expense_entity.to_dict())
         return expense_ref[1].id
@@ -28,11 +47,11 @@ class FixedExpenseDAO:
             doc_id = expense.id  # Get the document ID
 
             # Check if the object is of date type
-            if isinstance(expense_dict['fexpense_start_date'], date):
+            if isinstance(expense_dict.get('fexpense_start_date'), date):
                 # Convert datetime to string
                 expense_dict['fexpense_start_date'] = expense_dict['fexpense_start_date'].strftime("%Y-%m-%d %H:%M:%S")
                  # Check if the object is of date type
-            if isinstance(expense_dict['fexpense_end_date'], date):
+            if isinstance(expense_dict.get('fexpense_end_date'), date):
                 # Convert datetime to string
                 expense_dict['fexpense_end_date'] = expense_dict['fexpense_end_date'].strftime("%Y-%m-%d %H:%M:%S")
                 
@@ -58,6 +77,8 @@ class FixedExpenseDAO:
             expense_data = expense.to_dict()
             if expense_data.get('user_id') == fixed_expense_entity.user_id:
                 #ID match
+                fixed_expense_entity.fexpense_start_date = self._parse_date(fixed_expense_entity.fexpense_start_date)
+                fixed_expense_entity.fexpense_end_date = self._parse_date(fixed_expense_entity.fexpense_end_date)
                 expense_ref.update(fixed_expense_entity.to_dict())
                 logging.info(f"Fixed Expense with ID {id} for user_id {fixed_expense_entity.user_id} successfully updated.")
                 return True

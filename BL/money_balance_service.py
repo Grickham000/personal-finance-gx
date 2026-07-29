@@ -157,12 +157,12 @@ class MoneyBalanceService:
 
         for fe in fixed_expenses:
             fe_amount = float(fe.fixed_expense)
-            fe_start_str = fe.fexpense_start_date.replace('Z', '')
-            fe_end_str = fe.fexpense_end_date.replace('Z', '')
+            fe_start_str = fe.fexpense_start_date.replace('Z', '') if isinstance(fe.fexpense_start_date, str) else fe.fexpense_start_date
+            fe_end_str = fe.fexpense_end_date.replace('Z', '') if isinstance(fe.fexpense_end_date, str) else fe.fexpense_end_date
             
             try:
-                fe_start = datetime.fromisoformat(fe_start_str)
-                fe_end = datetime.fromisoformat(fe_end_str)
+                fe_start = datetime.fromisoformat(fe_start_str) if isinstance(fe_start_str, str) else fe_start_str
+                fe_end = datetime.fromisoformat(fe_end_str) if isinstance(fe_end_str, str) else fe_end_str
             except Exception as e:
                 logging.error(f"Error parsing fixed expense dates: {e}")
                 continue

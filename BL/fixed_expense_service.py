@@ -37,18 +37,19 @@ class FixedExpenseService:
             if start_date or end_date:
                 try:
                     # Clean Z suffix if present
-                    ent_start_str = entity.fexpense_start_date.replace('Z', '')
-                    ent_end_str = entity.fexpense_end_date.replace('Z', '')
-                    ent_start = datetime.fromisoformat(ent_start_str)
-                    ent_end = datetime.fromisoformat(ent_end_str)
+                    ent_start_str = entity.fexpense_start_date.replace('Z', '') if isinstance(entity.fexpense_start_date, str) else entity.fexpense_start_date
+                    ent_end_str = entity.fexpense_end_date.replace('Z', '') if isinstance(entity.fexpense_end_date, str) else entity.fexpense_end_date
+                    
+                    ent_start = datetime.fromisoformat(ent_start_str) if isinstance(ent_start_str, str) else ent_start_str
+                    ent_end = datetime.fromisoformat(ent_end_str) if isinstance(ent_end_str, str) else ent_end_str
                     
                     if start_date:
-                        s_date = datetime.fromisoformat(start_date.replace('Z', ''))
-                        if ent_start < s_date:
+                        s_date = datetime.fromisoformat(start_date.replace('Z', '')) if isinstance(start_date, str) else start_date
+                        if ent_start and ent_start < s_date:
                             continue
                     if end_date:
-                        e_date = datetime.fromisoformat(end_date.replace('Z', ''))
-                        if ent_end > e_date:
+                        e_date = datetime.fromisoformat(end_date.replace('Z', '')) if isinstance(end_date, str) else end_date
+                        if ent_end and ent_end > e_date:
                             continue
                 except Exception as e:
                     logging.warning(f"Error filtering fixed expense by date: {e}")

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Alert } from 'react-native';
 import { apiService } from '../services/api';
+import { extractErrorMessage } from '../utils/errors';
 
 export type ExpenseTab = 'variable' | 'fixed';
 
@@ -128,7 +129,7 @@ export const useExpenses = () => {
       await fetchData();
     } catch (err: any) {
       console.error(err);
-      setFormError(err.response?.data || err.message || 'Failed to save expense.');
+      setFormError(extractErrorMessage(err));
     } finally {
       setSubmitting(false);
     }
@@ -254,7 +255,7 @@ export const useExpenses = () => {
       Alert.alert('Success', `Fixed expense ${editingFixedId ? 'updated' : 'created'} successfully!`);
     } catch (err: any) {
       console.error(err);
-      setFixedError(err.response?.data || err.message || 'Failed to save fixed expense.');
+      setFixedError(extractErrorMessage(err));
     } finally {
       setSubmitting(false);
     }

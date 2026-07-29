@@ -37,7 +37,7 @@ class FixedExpenseCreateSchema(BaseModel):
     fixed_expense: float = Field(..., description="Fixed recurring expense amount", example=1000.00)
     fexpense_type: str = Field(..., description="Fixed expense category", example="housing")
     fexpense_start_date: str = Field(..., description="Start date of the fixed expense", example="2023-01-01T00:00:00Z")
-    fexpense_end_date: str = Field(..., description="End date of the fixed expense", example="2023-12-31T00:00:00Z")
+    fexpense_end_date: Optional[str] = Field(None, description="End date of the fixed expense", example="2023-12-31T00:00:00Z")
     fexpense_description: str = Field(..., description="Description", example="Rent")
     expire: bool = Field(..., description="Whether this fixed expense has expired", example=False)
 

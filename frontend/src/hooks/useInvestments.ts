@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Alert } from 'react-native';
 import { apiService } from '../services/api';
+import { extractErrorMessage } from '../utils/errors';
 
 export type SubTab = 'savings' | 'investments';
 
@@ -75,7 +76,7 @@ export const useInvestments = () => {
       await fetchData();
     } catch (err: any) {
       console.error(err);
-      setSavingsError(err.response?.data || err.message || 'Failed to add savings account.');
+      setSavingsError(extractErrorMessage(err));
     } finally {
       setSubmitting(false);
     }
@@ -109,7 +110,7 @@ export const useInvestments = () => {
       await fetchData();
     } catch (err: any) {
       console.error(err);
-      setInvError(err.response?.data || err.message || 'Failed to add investment.');
+      setInvError(extractErrorMessage(err));
     } finally {
       setSubmitting(false);
     }
