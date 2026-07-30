@@ -1,6 +1,6 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
 // @ts-ignore
-import { initializeAuth, getReactNativePersistence, getAuth, signInWithEmailAndPassword, signOut, User } from 'firebase/auth';
+import { initializeAuth, getReactNativePersistence, getAuth, signInWithEmailAndPassword, signOut, User, sendPasswordResetEmail } from 'firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { CONFIG } from '../constants/config';
 
@@ -34,4 +34,11 @@ export const loginUser = async (email: string, password: string): Promise<User> 
  */
 export const logoutUser = async (): Promise<void> => {
   await signOut(auth);
+};
+
+/**
+ * Sends a password reset email to the specified user email
+ */
+export const sendResetPasswordEmail = async (email: string): Promise<void> => {
+  await sendPasswordResetEmail(auth, email);
 };

@@ -227,4 +227,48 @@ export const getStyles = (colors: any) => StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
   },
+  accountInfoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    marginBottom: Spacing.md,
+  },
+  accountEmailText: {
+    fontSize: 14,
+  },
+  accountButtonsContainer: {
+    gap: Spacing.md,
+    marginTop: Spacing.xs,
+  },
+  resetButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1.5,
+    borderRadius: 12,
+    paddingVertical: 12,
+    gap: Spacing.sm,
+  },
+  resetButtonText: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  logoutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 12,
+    paddingVertical: 12,
+    gap: Spacing.sm,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  logoutButtonText: {
+    color: '#FFF',
+    fontSize: 14,
+    fontWeight: '700',
+  },
 });

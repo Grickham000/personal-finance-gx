@@ -7,7 +7,8 @@ import {
   TextInput, 
   ActivityIndicator, 
   Switch,
-  Modal
+  Modal,
+  Alert
 } from 'react-native';
 import { useTheme } from '../../context/ThemeContext';
 import { Shadows, Spacing } from '../../constants/theme';
@@ -18,14 +19,70 @@ import {
   Moon, 
   Sun, 
   Save,
-  Trash2
+  Trash2,
+  KeyRound,
+  LogOut,
+  Mail
 } from 'lucide-react-native';
 import { getStyles } from '../../styles/profile.styles';
 import { useProfile } from '../../hooks/useProfile';
+import { useAuth } from '../../context/AuthContext';
+import { logoutUser, sendResetPasswordEmail } from '../../services/auth';
 
 export default function ProfileScreen() {
   const { colors, toggleTheme, isDark } = useTheme();
   const styles = getStyles(colors);
+  const { user } = useAuth();
+
+  const handleLogout = () => {
+    Alert.alert(
+      'Log Out',
+      'Are you sure you want to log out of your account?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Log Out', 
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await logoutUser();
+            } catch (err: any) {
+              console.error('Logout error:', err);
+              Alert.alert('Error', 'Failed to log out. Please try again.');
+            }
+          }
+        }
+      ]
+    );
+  };
+
+  const handleResetPassword = async () => {
+    const email = user?.email;
+    if (!email) {
+      Alert.alert('Error', 'Unable to retrieve your email address.');
+      return;
+    }
+
+    Alert.alert(
+      'Reset Password',
+      `Would you like to send a password reset link to ${email}?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Send Link',
+          onPress: async () => {
+            try {
+              await sendResetPasswordEmail(email);
+              Alert.alert('Success', 'Password reset email sent. Please check your inbox.');
+            } catch (err: any) {
+              console.error('Password reset settings error:', err);
+              Alert.alert('Error', err.message || 'Failed to send password reset email.');
+            }
+          }
+        }
+      ]
+    );
+  };
 
   const {
     userName,
@@ -233,6 +290,43 @@ export default function ProfileScreen() {
               trackColor={{ false: colors.border, true: colors.primary }}
               thumbColor="#FFF"
             />
+          </View>
+        </View>
+
+        {/* Account & Security */}
+        <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }, Shadows.sm]}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Account & Security</Text>
+          
+          <View style={styles.accountInfoRow}>
+            <Mail size={18} color={colors.textSecondary} />
+            <Text style={[styles.accountEmailText, { color: colors.textSecondary }]}>
+              Logged in as:{' '}
+              <Text style={{ color: colors.text, fontWeight: '700' }}>
+                {user?.email || 'Unknown User'}
+              </Text>
+            </Text>
+          </View>
+
+          <View style={styles.accountButtonsContainer}>
+            <TouchableOpacity 
+              style={[styles.resetButton, { borderColor: colors.primary }]}
+              onPress={handleResetPassword}
+              activeOpacity={0.7}
+            >
+              <KeyRound size={16} color={colors.primary} />
+              <Text style={[styles.resetButtonText, { color: colors.primary }]}>
+                Reset Password via Email
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={[styles.logoutButton, { backgroundColor: colors.danger }]}
+              onPress={handleLogout}
+              activeOpacity={0.85}
+            >
+              <LogOut size={16} color="#FFF" />
+              <Text style={styles.logoutButtonText}>Log Out</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </ScrollView>

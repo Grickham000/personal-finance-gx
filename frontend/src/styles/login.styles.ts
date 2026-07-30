@@ -82,6 +82,15 @@ export const getStyles = (colors: Record<ThemeColor, string>) => StyleSheet.crea
     height: '100%',
     justifyContent: 'center',
   },
+  forgotPasswordContainer: {
+    alignSelf: 'flex-end',
+    marginBottom: Spacing.md,
+    marginTop: -Spacing.xs,
+  },
+  forgotPasswordText: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
   button: {
     borderRadius: 12,
     paddingVertical: 14,
