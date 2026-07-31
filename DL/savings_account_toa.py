@@ -9,7 +9,8 @@ class SavingsAccountTOA:
             interest_rate=dto.interest_rate,
             balance=dto.balance,
             description=dto.description,
-            id=dto.id
+            id=dto.id,
+            history=dto.history
         )
 
     def entity_to_dto(self, entity: SavingsAccountEntity) -> SavingsAccountDTO:
@@ -19,5 +20,6 @@ class SavingsAccountTOA:
             interest_rate=entity.interest_rate,
             balance=entity.balance,
             description=entity.description,
-            id=entity.id
+            id=entity.id,
+            history=entity.history
         )

@@ -1,5 +1,6 @@
 from firebase_admin import firestore
 from DL.savings_account_entity import SavingsAccountEntity
+from datetime import datetime, timezone
 import logging
 
 class SavingsAccountDAO:
@@ -7,6 +8,9 @@ class SavingsAccountDAO:
         self.db = firestore.client()
 
     def create_savings_account(self, savings_account_entity: SavingsAccountEntity) -> str:
+        date_str = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+        savings_account_entity.history = [{'balance': float(savings_account_entity.balance), 'date': date_str}]
+        
         ref = self.db.collection('savings_accounts').add(savings_account_entity.to_dict())
         return ref[1].id
 
@@ -41,6 +45,34 @@ class SavingsAccountDAO:
         if doc.exists:
             data = doc.to_dict()
             if data.get('user_id') == savings_account_entity.user_id:
+                existing_history = data.get('history', [])
+                current_balance = data.get('balance', 0.0)
+                
+                date_str = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+                
+                # Check if balance has changed
+                if float(savings_account_entity.balance) != float(current_balance):
+                    if not existing_history:
+                        existing_history = [
+                            {
+                                'balance': float(current_balance),
+                                'date': date_str
+                            }
+                        ]
+                    existing_history.append({
+                        'balance': float(savings_account_entity.balance),
+                        'date': date_str
+                    })
+                elif not existing_history:
+                    existing_history = [
+                        {
+                            'balance': float(current_balance),
+                            'date': date_str
+                        }
+                    ]
+                
+                savings_account_entity.history = existing_history
+                
                 doc_ref.update(savings_account_entity.to_dict())
                 logging.info(f"Savings account {id} successfully updated.")
                 return True

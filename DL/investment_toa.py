@@ -12,7 +12,8 @@ class InvestmentTOA:
             end_date=dto.end_date,
             is_released=dto.is_released,
             description=dto.description,
-            id=dto.id
+            id=dto.id,
+            history=dto.history
         )
 
     def entity_to_dto(self, entity: InvestmentEntity) -> InvestmentDTO:
@@ -25,5 +26,6 @@ class InvestmentTOA:
             end_date=entity.end_date,
             is_released=entity.is_released,
             description=entity.description,
-            id=entity.id
+            id=entity.id,
+            history=entity.history
         )

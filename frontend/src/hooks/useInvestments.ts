@@ -32,6 +32,16 @@ export const useInvestments = () => {
   const [invDesc, setInvDesc] = useState('');
   const [invError, setInvError] = useState('');
 
+  // Editing and Details viewing states for Investments
+  const [editingInvestment, setEditingInvestment] = useState<any | null>(null);
+  const [viewingInvestment, setViewingInvestment] = useState<any | null>(null);
+  const [detailsModalVisible, setDetailsModalVisible] = useState(false);
+
+  // Editing and Details viewing states for Savings
+  const [editingSavings, setEditingSavings] = useState<any | null>(null);
+  const [viewingSavings, setViewingSavings] = useState<any | null>(null);
+  const [savingsDetailsModalVisible, setSavingsDetailsModalVisible] = useState(false);
+
   const fetchData = useCallback(async () => {
     try {
       const [profileData, savingsData, investmentsData] = await Promise.all([
@@ -42,8 +52,10 @@ export const useInvestments = () => {
       setProfile(profileData);
       setSavings(savingsData || []);
       setInvestments(investmentsData || []);
+      return { savingsData, investmentsData };
     } catch (err) {
       console.error('Error fetching savings/investments:', err);
+      return null;
     } finally {
       setLoading(false);
     }
@@ -61,19 +73,37 @@ export const useInvestments = () => {
     setSubmitting(true);
     setSavingsError('');
     try {
-      await apiService.createSavingsAccount({
+      const payload = {
         name: savingsName.trim(),
         interest_rate: parseFloat(savingsRate),
         balance: parseFloat(savingsBalance),
         description: savingsDesc.trim()
-      });
+      };
+
+      const prevEditingId = editingSavings?.id;
+
+      if (editingSavings) {
+        await apiService.updateSavingsAccount(editingSavings.id, payload);
+      } else {
+        await apiService.createSavingsAccount(payload);
+      }
+
       setSavingsName('');
       setSavingsRate('');
       setSavingsBalance('');
       setSavingsDesc('');
+      setEditingSavings(null);
       setSavingsModalVisible(false);
       setLoading(true);
-      await fetchData();
+      const data = await fetchData();
+
+      // If we just edited the viewed savings account, refresh its data in the details view
+      if (prevEditingId && data) {
+        const refreshedSav = data.savingsData?.find((s: any) => s.id === prevEditingId);
+        if (refreshedSav) {
+          setViewingSavings(refreshedSav);
+        }
+      }
     } catch (err: any) {
       console.error(err);
       setSavingsError(extractErrorMessage(err));
@@ -90,30 +120,112 @@ export const useInvestments = () => {
     setSubmitting(true);
     setInvError('');
     try {
-      await apiService.createInvestment({
+      const payload = {
         name: invName.trim(),
         interest_rate: parseFloat(invRate),
         amount: parseFloat(invAmount),
         has_end_date: invHasEndDate,
         end_date: invHasEndDate && invEndDate ? new Date(invEndDate).toISOString() : null,
-        is_released: false,
+        is_released: editingInvestment ? editingInvestment.is_released : false,
         description: invDesc.trim()
-      });
+      };
+
+      const prevEditingId = editingInvestment?.id;
+
+      if (editingInvestment) {
+        await apiService.updateInvestment(editingInvestment.id, payload);
+      } else {
+        await apiService.createInvestment(payload);
+      }
+
       setInvName('');
       setInvRate('');
       setInvAmount('');
       setInvHasEndDate(false);
       setInvEndDate('');
       setInvDesc('');
+      setEditingInvestment(null);
       setInvestmentModalVisible(false);
       setLoading(true);
-      await fetchData();
+      const data = await fetchData();
+
+      // If we just edited the viewed asset, refresh its data in the details view
+      if (prevEditingId && data) {
+        const refreshedInv = data.investmentsData?.find((i: any) => i.id === prevEditingId);
+        if (refreshedInv) {
+          setViewingInvestment(refreshedInv);
+        }
+      }
     } catch (err: any) {
       console.error(err);
       setInvError(extractErrorMessage(err));
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleEditSavingsPress = (item: any) => {
+    setEditingSavings(item);
+    setSavingsName(item.name);
+    setSavingsRate(item.interest_rate.toString());
+    setSavingsBalance(item.balance.toString());
+    setSavingsDesc(item.description || '');
+    setSavingsError('');
+    setSavingsModalVisible(true);
+  };
+
+  const handleCloseSavingsModal = () => {
+    setSavingsName('');
+    setSavingsRate('');
+    setSavingsBalance('');
+    setSavingsDesc('');
+    setSavingsError('');
+    setEditingSavings(null);
+    setSavingsModalVisible(false);
+  };
+
+  const handleSavingsDetailsPress = (item: any) => {
+    setViewingSavings(item);
+    setSavingsDetailsModalVisible(true);
+  };
+
+  const handleCloseSavingsDetailsModal = () => {
+    setViewingSavings(null);
+    setSavingsDetailsModalVisible(false);
+  };
+
+  const handleEditInvestmentPress = (item: any) => {
+    setEditingInvestment(item);
+    setInvName(item.name);
+    setInvRate(item.interest_rate.toString());
+    setInvAmount(item.amount.toString());
+    setInvHasEndDate(item.has_end_date);
+    setInvEndDate(item.end_date ? item.end_date.split(' ')[0] : '');
+    setInvDesc(item.description || '');
+    setInvError('');
+    setInvestmentModalVisible(true);
+  };
+
+  const handleCloseInvestmentModal = () => {
+    setInvName('');
+    setInvRate('');
+    setInvAmount('');
+    setInvHasEndDate(false);
+    setInvEndDate('');
+    setInvDesc('');
+    setInvError('');
+    setEditingInvestment(null);
+    setInvestmentModalVisible(false);
+  };
+
+  const handleDetailsPress = (item: any) => {
+    setViewingInvestment(item);
+    setDetailsModalVisible(true);
+  };
+
+  const handleCloseDetailsModal = () => {
+    setViewingInvestment(null);
+    setDetailsModalVisible(false);
   };
 
   const handleDeleteSavings = (id: string, name: string) => {
@@ -129,6 +241,10 @@ export const useInvestments = () => {
             try {
               await apiService.deleteSavingsAccount(id);
               setSavings(prev => prev.filter(s => s.id !== id));
+              if (viewingSavings && viewingSavings.id === id) {
+                setSavingsDetailsModalVisible(false);
+                setViewingSavings(null);
+              }
             } catch (err) {
               console.error(err);
               Alert.alert('Error', 'Failed to remove account.');
@@ -152,6 +268,10 @@ export const useInvestments = () => {
             try {
               await apiService.deleteInvestment(id);
               setInvestments(prev => prev.filter(i => i.id !== id));
+              if (viewingInvestment && viewingInvestment.id === id) {
+                setDetailsModalVisible(false);
+                setViewingInvestment(null);
+              }
             } catch (err) {
               console.error(err);
               Alert.alert('Error', 'Failed to delete investment.');
@@ -205,5 +325,25 @@ export const useInvestments = () => {
     handleDeleteInvestment,
     totalSavings,
     totalInvestments,
+    editingInvestment,
+    setEditingInvestment,
+    viewingInvestment,
+    setViewingInvestment,
+    detailsModalVisible,
+    setDetailsModalVisible,
+    handleEditInvestmentPress,
+    handleCloseInvestmentModal,
+    handleDetailsPress,
+    handleCloseDetailsModal,
+    editingSavings,
+    setEditingSavings,
+    viewingSavings,
+    setViewingSavings,
+    savingsDetailsModalVisible,
+    setSavingsDetailsModalVisible,
+    handleEditSavingsPress,
+    handleCloseSavingsModal,
+    handleSavingsDetailsPress,
+    handleCloseSavingsDetailsModal,
   };
 };

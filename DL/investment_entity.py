@@ -1,5 +1,5 @@
 class BaseInvestmentEntity:
-    def __init__(self, user_id: str, name: str, interest_rate: float, amount: float, has_end_date: bool, end_date, is_released: bool, description: str):
+    def __init__(self, user_id: str, name: str, interest_rate: float, amount: float, has_end_date: bool, end_date, is_released: bool, description: str, history: list = None):
         self.user_id = user_id
         self.name = name
         self.interest_rate = interest_rate
@@ -8,6 +8,7 @@ class BaseInvestmentEntity:
         self.end_date = end_date
         self.is_released = is_released
         self.description = description
+        self.history = history if history is not None else []
 
     def to_dict(self):
         return {
@@ -18,18 +19,20 @@ class BaseInvestmentEntity:
             'has_end_date': self.has_end_date,
             'end_date': self.end_date,
             'is_released': self.is_released,
-            'description': self.description
+            'description': self.description,
+            'history': self.history
         }
 
     def __repr__(self):
         return (f"{self.__class__.__name__}(user_id={self.user_id}, name={self.name}, "
                 f"interest_rate={self.interest_rate}, amount={self.amount}, "
                 f"has_end_date={self.has_end_date}, end_date={self.end_date}, "
-                f"is_released={self.is_released}, description={self.description})")
+                f"is_released={self.is_released}, description={self.description}, "
+                f"history={self.history})")
 
 class InvestmentEntity(BaseInvestmentEntity):
-    def __init__(self, user_id: str, name: str, interest_rate: float, amount: float, has_end_date: bool, end_date, is_released: bool, description: str, id: str = None):
-        super().__init__(user_id, name, interest_rate, amount, has_end_date, end_date, is_released, description)
+    def __init__(self, user_id: str, name: str, interest_rate: float, amount: float, has_end_date: bool, end_date, is_released: bool, description: str, id: str = None, history: list = None):
+        super().__init__(user_id, name, interest_rate, amount, has_end_date, end_date, is_released, description, history)
         self.id = id
 
     def to_dict(self):
@@ -40,6 +43,9 @@ class InvestmentEntity(BaseInvestmentEntity):
 
     @classmethod
     def from_dict(cls, data: dict, id: str = None):
+        history = data.get('history', [])
+        if isinstance(history, list):
+            history = sorted(history, key=lambda x: x.get('date', ''), reverse=True)
         return cls(
             user_id=data.get('user_id'),
             name=data.get('name'),
@@ -49,7 +55,8 @@ class InvestmentEntity(BaseInvestmentEntity):
             end_date=data.get('end_date'),
             is_released=data.get('is_released', False),
             description=data.get('description', ""),
-            id=id
+            id=id,
+            history=history
         )
 
     def __repr__(self):

@@ -152,3 +152,106 @@ def test_controller_get_all_success(mock_controller_service):
     body = json.loads(response.get_body().decode())
     assert len(body) == 1
     assert body[0]["id"] == "id123"
+
+
+# =========================================================
+# 6. Savings History Integration Tests
+# =========================================================
+def test_savings_history_toa_mapping():
+    history_data = [{"balance": 5000.0, "date": "2026-07-31T02:00:00Z"}]
+    dto = SavingsAccountDTO(
+        user_id="user_123",
+        name="Savings Account A",
+        interest_rate=3.5,
+        balance=5000.0,
+        description="Fund A",
+        id="account_id_999",
+        history=history_data
+    )
+    toa = SavingsAccountTOA()
+    entity = toa.dto_to_entity(dto)
+    assert entity.history == history_data
+
+    mapped_dto = toa.entity_to_dto(entity)
+    assert mapped_dto.history == history_data
+
+def test_savings_dao_create_initializes_history(mock_dao):
+    mock_ref = MagicMock()
+    mock_ref.id = "new_doc_id_history"
+    mock_dao.db.collection.return_value.add.return_value = (None, mock_ref)
+
+    entity = SavingsAccountEntity("user_123", "Ally", 4.0, 100.0, "Desc")
+    mock_dao.create_savings_account(entity)
+
+    # Assert history was auto-initialized
+    assert len(entity.history) == 1
+    assert entity.history[0]["balance"] == 100.0
+    assert "date" in entity.history[0]
+
+def test_savings_dao_update_history_balance_changed(mock_dao):
+    mock_doc = MagicMock()
+    mock_doc.exists = True
+    mock_doc.to_dict.return_value = {
+        "user_id": "user_123",
+        "name": "Ally",
+        "interest_rate": 4.0,
+        "balance": 100.0,
+        "history": [{"balance": 100.0, "date": "2026-07-31T01:00:00Z"}]
+    }
+    mock_dao.db.collection.return_value.document.return_value.get.return_value = mock_doc
+
+    # Update with new balance: 120.0
+    updated_entity = SavingsAccountEntity("user_123", "Ally", 4.0, 120.0, "Desc", history=[])
+    res = mock_dao.update_savings_account(updated_entity, "doc_123")
+
+    assert res is True
+    # Should have old history + new entry
+    assert len(updated_entity.history) == 2
+    assert updated_entity.history[0]["balance"] == 100.0
+    assert updated_entity.history[1]["balance"] == 120.0
+
+def test_savings_dao_update_history_balance_same(mock_dao):
+    mock_doc = MagicMock()
+    mock_doc.exists = True
+    mock_doc.to_dict.return_value = {
+        "user_id": "user_123",
+        "name": "Ally",
+        "interest_rate": 4.0,
+        "balance": 100.0,
+        "history": [{"balance": 100.0, "date": "2026-07-31T01:00:00Z"}]
+    }
+    mock_dao.db.collection.return_value.document.return_value.get.return_value = mock_doc
+
+    # Update with same balance: 100.0 (change interest_rate to 4.5)
+    updated_entity = SavingsAccountEntity("user_123", "Ally", 4.5, 100.0, "Desc", history=[])
+    res = mock_dao.update_savings_account(updated_entity, "doc_123")
+
+    assert res is True
+    # History should remain unchanged
+    assert len(updated_entity.history) == 1
+    assert updated_entity.history[0]["balance"] == 100.0
+
+
+def test_savings_from_dict_sorts_history_descending():
+    data = {
+        "user_id": "user_123",
+        "name": "Ally",
+        "interest_rate": 4.0,
+        "balance": 100.0,
+        "history": [
+            {"balance": 100.0, "date": "2026-07-30T10:00:00Z"},
+            {"balance": 120.0, "date": "2026-07-31T12:00:00Z"},
+            {"balance": 110.0, "date": "2026-07-31T02:00:00Z"}
+        ]
+    }
+    entity = SavingsAccountEntity.from_dict(data)
+    assert len(entity.history) == 3
+    # Newest should be index 0
+    assert entity.history[0]["date"] == "2026-07-31T12:00:00Z"
+    assert entity.history[0]["balance"] == 120.0
+    # Middle should be index 1
+    assert entity.history[1]["date"] == "2026-07-31T02:00:00Z"
+    assert entity.history[1]["balance"] == 110.0
+    # Oldest should be index 2
+    assert entity.history[2]["date"] == "2026-07-30T10:00:00Z"
+    assert entity.history[2]["balance"] == 100.0

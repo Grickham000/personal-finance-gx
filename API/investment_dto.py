@@ -1,7 +1,7 @@
 from Common.Models.investment_api_model import InvestmentApiModel
 
 class InvestmentDTO:
-    def __init__(self, user_id: str, name: str, interest_rate: float, amount: float, has_end_date: bool, end_date: str = None, is_released: bool = False, description: str = "", id: str = None):
+    def __init__(self, user_id: str, name: str, interest_rate: float, amount: float, has_end_date: bool, end_date: str = None, is_released: bool = False, description: str = "", id: str = None, history: list = None):
         self.id = id
         self.user_id = user_id
         self.name = name
@@ -11,6 +11,7 @@ class InvestmentDTO:
         self.end_date = end_date
         self.is_released = is_released
         self.description = description
+        self.history = history if history is not None else []
 
     @classmethod
     def from_api_model(cls, api_model: InvestmentApiModel, user_id: str = None, id: str = None):
@@ -23,7 +24,8 @@ class InvestmentDTO:
             end_date=api_model.end_date,
             is_released=api_model.is_released,
             description=api_model.description,
-            id=id
+            id=id,
+            history=getattr(api_model, 'history', [])
         )
 
     def to_dict(self):
@@ -35,7 +37,8 @@ class InvestmentDTO:
             'has_end_date': self.has_end_date,
             'end_date': self.end_date,
             'is_released': self.is_released,
-            'description': self.description
+            'description': self.description,
+            'history': self.history
         }
         if self.id:
             result['id'] = self.id

@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { useTheme } from '../../context/ThemeContext';
 import { Shadows, Spacing } from '../../constants/theme';
-import { Plus, Trash2, X, Landmark, PiggyBank, Percent } from 'lucide-react-native';
+import { Plus, Trash2, X, Landmark, PiggyBank, Percent, Edit2, Calendar, TrendingUp, TrendingDown, ArrowUpRight, ArrowDownRight } from 'lucide-react-native';
 import { getStyles } from '../../styles/investments.styles';
 import { useInvestments } from '../../hooks/useInvestments';
 import { formatCurrency } from '../../utils/currency';
@@ -60,6 +60,23 @@ export default function InvestmentsScreen() {
     handleDeleteInvestment,
     totalSavings,
     totalInvestments,
+    editingInvestment,
+    viewingInvestment,
+    detailsModalVisible,
+    handleEditInvestmentPress,
+    handleCloseInvestmentModal,
+    handleDetailsPress,
+    handleCloseDetailsModal,
+    editingSavings,
+    setEditingSavings,
+    viewingSavings,
+    setViewingSavings,
+    savingsDetailsModalVisible,
+    setSavingsDetailsModalVisible,
+    handleEditSavingsPress,
+    handleCloseSavingsModal,
+    handleSavingsDetailsPress,
+    handleCloseSavingsDetailsModal,
   } = useInvestments();
 
   if (loading) {
@@ -129,9 +146,11 @@ export default function InvestmentsScreen() {
               </View>
             ) : (
               savings.map((item) => (
-                <View 
+                <TouchableOpacity 
                   key={item.id} 
                   style={[styles.assetItem, { backgroundColor: colors.card, borderColor: colors.border }, Shadows.sm]}
+                  activeOpacity={0.7}
+                  onPress={() => handleSavingsDetailsPress(item)}
                 >
                   <Text style={[styles.assetName, { color: colors.text }]}>{item.name}</Text>
                   
@@ -155,12 +174,15 @@ export default function InvestmentsScreen() {
                     </View>
                     <TouchableOpacity 
                       style={styles.deleteButton} 
-                      onPress={() => handleDeleteSavings(item.id, item.name)}
+                      onPress={(e) => {
+                        e.stopPropagation();
+                        handleDeleteSavings(item.id, item.name);
+                      }}
                     >
                       <Trash2 size={16} color={colors.danger} />
                     </TouchableOpacity>
                   </View>
-                </View>
+                </TouchableOpacity>
               ))
             )}
           </>
@@ -185,18 +207,20 @@ export default function InvestmentsScreen() {
               </View>
             ) : (
               investments.map((item) => (
-                <View 
+                <TouchableOpacity 
                   key={item.id} 
                   style={[styles.assetItem, { backgroundColor: colors.card, borderColor: colors.border }, Shadows.sm]}
+                  activeOpacity={0.7}
+                  onPress={() => handleDetailsPress(item)}
                 >
                   <Text style={[styles.assetName, { color: colors.text }]}>{item.name}</Text>
                   
                   <Text style={[styles.assetAmountLarge, { color: colors.text }]}>
                     {formatCurrency(item.amount, profile?.currency)}
                   </Text>
-
+  
                   <View style={[styles.cardDivider, { backgroundColor: colors.border }]} />
-
+  
                   <View style={styles.assetFooterRow}>
                     <View style={styles.assetMetaVertical}>
                       <Percent size={12} color={colors.success} />
@@ -211,30 +235,35 @@ export default function InvestmentsScreen() {
                     </View>
                     <TouchableOpacity 
                       style={styles.deleteButton} 
-                      onPress={() => handleDeleteInvestment(item.id, item.name)}
+                      onPress={(e) => {
+                        e.stopPropagation();
+                        handleDeleteInvestment(item.id, item.name);
+                      }}
                     >
                       <Trash2 size={16} color={colors.danger} />
                     </TouchableOpacity>
                   </View>
-                </View>
+                </TouchableOpacity>
               ))
             )}
           </>
         )}
       </ScrollView>
 
-      {/* Add Savings Account Modal */}
+      {/* Add/Edit Savings Account Modal */}
       <Modal
         animationType="slide"
         transparent={true}
         visible={savingsModalVisible}
-        onRequestClose={() => setSavingsModalVisible(false)}
+        onRequestClose={handleCloseSavingsModal}
       >
         <View style={styles.modalOverlay}>
           <View style={[styles.modalContent, { backgroundColor: colors.card }]}>
             <View style={[styles.modalHeader, { borderBottomColor: colors.border }]}>
-              <Text style={[styles.modalTitle, { color: colors.text }]}>Add Savings Account</Text>
-              <TouchableOpacity onPress={() => setSavingsModalVisible(false)}>
+              <Text style={[styles.modalTitle, { color: colors.text }]}>
+                {editingSavings ? 'Edit Savings Account' : 'Add Savings Account'}
+              </Text>
+              <TouchableOpacity onPress={handleCloseSavingsModal}>
                 <X size={20} color={colors.text} />
               </TouchableOpacity>
             </View>
@@ -266,7 +295,9 @@ export default function InvestmentsScreen() {
               </View>
 
               <View style={styles.formGroup}>
-                <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Current Balance ({profile?.currency || 'USD'})</Text>
+                <Text style={[styles.formLabel, { color: colors.textSecondary }]}>
+                  {editingSavings ? 'Current Balance' : 'Starting Balance'} ({profile?.currency || 'USD'})
+                </Text>
                 <TextInput
                   style={[styles.formInput, { color: colors.text, borderColor: colors.border }]}
                   placeholder="0.00"
@@ -296,10 +327,312 @@ export default function InvestmentsScreen() {
                 {submitting ? (
                   <ActivityIndicator color="#FFF" />
                 ) : (
-                  <Text style={styles.saveButtonText}>Add Account</Text>
+                  <Text style={styles.saveButtonText}>
+                    {editingSavings ? 'Save Changes' : 'Add Account'}
+                  </Text>
                 )}
               </TouchableOpacity>
             </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Savings Details Modal */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={savingsDetailsModalVisible}
+        onRequestClose={handleCloseSavingsDetailsModal}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { backgroundColor: colors.card, height: '80%' }]}>
+            <View style={[styles.modalHeader, { borderBottomColor: colors.border }]}>
+              <Text style={[styles.modalTitle, { color: colors.text }]}>Savings Account Details</Text>
+              <TouchableOpacity onPress={handleCloseSavingsDetailsModal}>
+                <X size={20} color={colors.text} />
+              </TouchableOpacity>
+            </View>
+
+            {viewingSavings && (
+              <ScrollView contentContainerStyle={styles.detailsContent}>
+                {/* Header Info */}
+                <View style={styles.detailsHeader}>
+                  <Text style={[styles.detailsName, { color: colors.text }]}>{viewingSavings.name}</Text>
+                  <Text style={[styles.detailsAmount, { color: colors.text }]}>
+                    {formatCurrency(viewingSavings.balance, profile?.currency)}
+                  </Text>
+                  {viewingSavings.description ? (
+                    <Text style={[styles.detailsDesc, { color: colors.textSecondary }]}>
+                      {viewingSavings.description}
+                    </Text>
+                  ) : null}
+                </View>
+
+                {/* Stats Grid */}
+                <View style={styles.statsGrid}>
+                  <View style={[styles.statBox, { backgroundColor: colors.background, borderColor: colors.border }]}>
+                    <Percent size={18} color={colors.success} />
+                    <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Interest Rate</Text>
+                    <Text style={[styles.statValue, { color: colors.text }]}>{viewingSavings.interest_rate}% APY</Text>
+                  </View>
+                </View>
+
+                {/* History Section */}
+                <View style={styles.historySection}>
+                  <Text style={[styles.sectionTitle, { color: colors.text }]}>Balance History</Text>
+                  
+                  {(!viewingSavings.history || viewingSavings.history.length === 0) ? (
+                    <View style={styles.emptyHistory}>
+                      <Text style={{ color: colors.textSecondary, fontSize: 13 }}>No balance data available</Text>
+                    </View>
+                  ) : (
+                    <View style={styles.timelineContainer}>
+                      {/* Timeline vertical line */}
+                      <View style={[styles.timelineLine, { backgroundColor: colors.border }]} />
+                      
+                      {(viewingSavings.history || [])
+                        .map((histItem, index, arr) => {
+                          let changeInfo = null;
+                          if (index < arr.length - 1) {
+                            const prevBalance = arr[index + 1].balance;
+                            const diff = histItem.balance - prevBalance;
+                            const pct = prevBalance > 0 ? (diff / prevBalance) * 100 : 0;
+                            const isGrowth = diff > 0;
+                            const isDecrease = diff < 0;
+                            const sign = diff >= 0 ? '+' : '';
+                            
+                            changeInfo = {
+                              text: `${sign}${formatCurrency(diff, profile?.currency)} (${sign}${pct.toFixed(1)}%)`,
+                              isGrowth,
+                              isDecrease,
+                              color: isGrowth ? colors.success : isDecrease ? colors.danger : colors.textSecondary
+                            };
+                          }
+                          
+                          return (
+                            <View key={index} style={styles.timelineItem}>
+                              {/* Left dot */}
+                              <View style={[
+                                styles.timelineDot, 
+                                { 
+                                  backgroundColor: colors.card,
+                                  borderColor: changeInfo?.isGrowth ? colors.success : changeInfo?.isDecrease ? colors.danger : colors.primary
+                                }
+                              ]} />
+                              
+                              {/* Right Content card */}
+                              <View style={[styles.timelineCard, { backgroundColor: colors.background, borderColor: colors.border }]}>
+                                <View style={styles.timelineCardHeader}>
+                                  <Text style={[styles.timelineDate, { color: colors.textSecondary }]}>
+                                    {new Date(histItem.date).toLocaleDateString()}
+                                  </Text>
+                                  {changeInfo && (
+                                    <View style={[
+                                      styles.changeBadge, 
+                                      { backgroundColor: changeInfo.isGrowth ? 'rgba(52, 211, 153, 0.1)' : changeInfo.isDecrease ? 'rgba(251, 113, 133, 0.1)' : 'rgba(148, 163, 184, 0.1)' }
+                                    ]}>
+                                      {changeInfo.isGrowth ? (
+                                        <ArrowUpRight size={12} color={colors.success} style={{ marginRight: 2 }} />
+                                      ) : changeInfo.isDecrease ? (
+                                        <ArrowDownRight size={12} color={colors.danger} style={{ marginRight: 2 }} />
+                                      ) : null}
+                                      <Text style={[styles.changeText, { color: changeInfo.color }]}>
+                                        {changeInfo.text}
+                                      </Text>
+                                    </View>
+                                  )}
+                                </View>
+                                <Text style={[styles.timelineAmount, { color: colors.text }]}>
+                                  {formatCurrency(histItem.balance, profile?.currency)}
+                                </Text>
+                              </View>
+                            </View>
+                          );
+                        })}
+                    </View>
+                  )}
+                </View>
+
+                {/* Details actions */}
+                <View style={styles.detailsActions}>
+                  <TouchableOpacity 
+                    style={[styles.editButtonAction, { borderColor: colors.primary }]}
+                    onPress={() => {
+                      handleCloseSavingsDetailsModal();
+                      handleEditSavingsPress(viewingSavings);
+                    }}
+                  >
+                    <Edit2 size={16} color={colors.primary} />
+                    <Text style={[styles.editButtonTextAction, { color: colors.primary }]}>Edit Account</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity 
+                    style={[styles.deleteButtonAction, { borderColor: colors.danger }]}
+                    onPress={() => {
+                      handleDeleteSavings(viewingSavings.id, viewingSavings.name);
+                    }}
+                  >
+                    <Trash2 size={16} color={colors.danger} />
+                    <Text style={[styles.deleteButtonTextAction, { color: colors.danger }]}>Remove Account</Text>
+                  </TouchableOpacity>
+                </View>
+              </ScrollView>
+            )}
+          </View>
+        </View>
+      </Modal>
+
+      {/* Investment Details Modal */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={detailsModalVisible}
+        onRequestClose={handleCloseDetailsModal}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { backgroundColor: colors.card, height: '80%' }]}>
+            <View style={[styles.modalHeader, { borderBottomColor: colors.border }]}>
+              <Text style={[styles.modalTitle, { color: colors.text }]}>Asset Details</Text>
+              <TouchableOpacity onPress={handleCloseDetailsModal}>
+                <X size={20} color={colors.text} />
+              </TouchableOpacity>
+            </View>
+
+            {viewingInvestment && (
+              <ScrollView contentContainerStyle={styles.detailsContent}>
+                {/* Header Info */}
+                <View style={styles.detailsHeader}>
+                  <Text style={[styles.detailsName, { color: colors.text }]}>{viewingInvestment.name}</Text>
+                  <Text style={[styles.detailsAmount, { color: colors.text }]}>
+                    {formatCurrency(viewingInvestment.amount, profile?.currency)}
+                  </Text>
+                  {viewingInvestment.description ? (
+                    <Text style={[styles.detailsDesc, { color: colors.textSecondary }]}>
+                      {viewingInvestment.description}
+                    </Text>
+                  ) : null}
+                </View>
+
+                {/* Stats Grid */}
+                <View style={styles.statsGrid}>
+                  <View style={[styles.statBox, { backgroundColor: colors.background, borderColor: colors.border }]}>
+                    <Percent size={18} color={colors.success} />
+                    <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Expected Yield</Text>
+                    <Text style={[styles.statValue, { color: colors.text }]}>{viewingInvestment.interest_rate}% APY</Text>
+                  </View>
+
+                  <View style={[styles.statBox, { backgroundColor: colors.background, borderColor: colors.border }]}>
+                    <Calendar size={18} color={colors.info} />
+                    <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Maturity Date</Text>
+                    <Text style={[styles.statValue, { color: colors.text }]}>
+                      {viewingInvestment.has_end_date && viewingInvestment.end_date
+                        ? new Date(viewingInvestment.end_date).toLocaleDateString()
+                        : 'No Maturity'}
+                    </Text>
+                  </View>
+                </View>
+
+                {/* History Section */}
+                <View style={styles.historySection}>
+                  <Text style={[styles.sectionTitle, { color: colors.text }]}>Performance History</Text>
+                  
+                  {(!viewingInvestment.history || viewingInvestment.history.length === 0) ? (
+                    <View style={styles.emptyHistory}>
+                      <Text style={{ color: colors.textSecondary, fontSize: 13 }}>No performance data available</Text>
+                    </View>
+                  ) : (
+                    <View style={styles.timelineContainer}>
+                      {/* Timeline vertical line */}
+                      <View style={[styles.timelineLine, { backgroundColor: colors.border }]} />
+                      
+                      {(viewingInvestment.history || [])
+                        .map((histItem, index, arr) => {
+                          let changeInfo = null;
+                          if (index < arr.length - 1) {
+                            const prevAmount = arr[index + 1].amount;
+                            const diff = histItem.amount - prevAmount;
+                            const pct = prevAmount > 0 ? (diff / prevAmount) * 100 : 0;
+                            const isGrowth = diff > 0;
+                            const isDecrease = diff < 0;
+                            const sign = diff >= 0 ? '+' : '';
+                            
+                            changeInfo = {
+                              text: `${sign}${formatCurrency(diff, profile?.currency)} (${sign}${pct.toFixed(1)}%)`,
+                              isGrowth,
+                              isDecrease,
+                              color: isGrowth ? colors.success : isDecrease ? colors.danger : colors.textSecondary
+                            };
+                          }
+                          
+                          return (
+                            <View key={index} style={styles.timelineItem}>
+                              {/* Left dot */}
+                              <View style={[
+                                styles.timelineDot, 
+                                { 
+                                  backgroundColor: colors.card,
+                                  borderColor: changeInfo?.isGrowth ? colors.success : changeInfo?.isDecrease ? colors.danger : colors.primary
+                                }
+                              ]} />
+                              
+                              {/* Right Content card */}
+                              <View style={[styles.timelineCard, { backgroundColor: colors.background, borderColor: colors.border }]}>
+                                <View style={styles.timelineCardHeader}>
+                                  <Text style={[styles.timelineDate, { color: colors.textSecondary }]}>
+                                    {new Date(histItem.date).toLocaleDateString()}
+                                  </Text>
+                                  {changeInfo && (
+                                    <View style={[
+                                      styles.changeBadge, 
+                                      { backgroundColor: changeInfo.isGrowth ? 'rgba(52, 211, 153, 0.1)' : changeInfo.isDecrease ? 'rgba(251, 113, 133, 0.1)' : 'rgba(148, 163, 184, 0.1)' }
+                                    ]}>
+                                      {changeInfo.isGrowth ? (
+                                        <ArrowUpRight size={12} color={colors.success} style={{ marginRight: 2 }} />
+                                      ) : changeInfo.isDecrease ? (
+                                        <ArrowDownRight size={12} color={colors.danger} style={{ marginRight: 2 }} />
+                                      ) : null}
+                                      <Text style={[styles.changeText, { color: changeInfo.color }]}>
+                                        {changeInfo.text}
+                                      </Text>
+                                    </View>
+                                  )}
+                                </View>
+                                <Text style={[styles.timelineAmount, { color: colors.text }]}>
+                                  {formatCurrency(histItem.amount, profile?.currency)}
+                                </Text>
+                              </View>
+                            </View>
+                          );
+                        })}
+                    </View>
+                  )}
+                </View>
+
+                {/* Details actions */}
+                <View style={styles.detailsActions}>
+                  <TouchableOpacity 
+                    style={[styles.editButtonAction, { borderColor: colors.primary }]}
+                    onPress={() => {
+                      handleCloseDetailsModal();
+                      handleEditInvestmentPress(viewingInvestment);
+                    }}
+                  >
+                    <Edit2 size={16} color={colors.primary} />
+                    <Text style={[styles.editButtonTextAction, { color: colors.primary }]}>Edit Asset</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity 
+                    style={[styles.deleteButtonAction, { borderColor: colors.danger }]}
+                    onPress={() => {
+                      handleDeleteInvestment(viewingInvestment.id, viewingInvestment.name);
+                    }}
+                  >
+                    <Trash2 size={16} color={colors.danger} />
+                    <Text style={[styles.deleteButtonTextAction, { color: colors.danger }]}>Delete Asset</Text>
+                  </TouchableOpacity>
+                </View>
+              </ScrollView>
+            )}
           </View>
         </View>
       </Modal>
@@ -309,13 +642,15 @@ export default function InvestmentsScreen() {
         animationType="slide"
         transparent={true}
         visible={investmentModalVisible}
-        onRequestClose={() => setInvestmentModalVisible(false)}
+        onRequestClose={handleCloseInvestmentModal}
       >
         <View style={styles.modalOverlay}>
           <View style={[styles.modalContent, { backgroundColor: colors.card }]}>
             <View style={[styles.modalHeader, { borderBottomColor: colors.border }]}>
-              <Text style={[styles.modalTitle, { color: colors.text }]}>Add Investment Asset</Text>
-              <TouchableOpacity onPress={() => setInvestmentModalVisible(false)}>
+              <Text style={[styles.modalTitle, { color: colors.text }]}>
+                {editingInvestment ? 'Edit Investment Asset' : 'Add Investment Asset'}
+              </Text>
+              <TouchableOpacity onPress={handleCloseInvestmentModal}>
                 <X size={20} color={colors.text} />
               </TouchableOpacity>
             </View>
@@ -347,7 +682,9 @@ export default function InvestmentsScreen() {
               </View>
 
               <View style={styles.formGroup}>
-                <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Principal Invested Amount ({profile?.currency || 'USD'})</Text>
+                <Text style={[styles.formLabel, { color: colors.textSecondary }]}>
+                  {editingInvestment ? 'Current Value' : 'Principal Invested Amount'} ({profile?.currency || 'USD'})
+                </Text>
                 <TextInput
                   style={[styles.formInput, { color: colors.text, borderColor: colors.border }]}
                   placeholder="0.00"
@@ -403,7 +740,9 @@ export default function InvestmentsScreen() {
                 {submitting ? (
                   <ActivityIndicator color="#FFF" />
                 ) : (
-                  <Text style={styles.saveButtonText}>Add Investment</Text>
+                  <Text style={styles.saveButtonText}>
+                    {editingInvestment ? 'Save Changes' : 'Add Investment'}
+                  </Text>
                 )}
               </TouchableOpacity>
             </ScrollView>

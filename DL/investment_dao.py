@@ -1,6 +1,6 @@
 from firebase_admin import firestore
 from DL.investment_entity import InvestmentEntity
-from datetime import datetime, date
+from datetime import datetime, date, timezone
 import logging
 
 class InvestmentDAO:
@@ -10,6 +10,10 @@ class InvestmentDAO:
     def create_investment(self, investment_entity: InvestmentEntity) -> str:
         if investment_entity.end_date:
             investment_entity.end_date = datetime.fromisoformat(investment_entity.end_date.replace("Z", "+00:00"))
+        
+        # Initialize history with the initial amount
+        date_str = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+        investment_entity.history = [{'amount': float(investment_entity.amount), 'date': date_str}]
         
         ref = self.db.collection('investments').add(investment_entity.to_dict())
         return ref[1].id
@@ -52,6 +56,34 @@ class InvestmentDAO:
         if doc.exists:
             data = doc.to_dict()
             if data.get('user_id') == investment_entity.user_id:
+                existing_history = data.get('history', [])
+                current_amount = data.get('amount', 0.0)
+                
+                date_str = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+                
+                # Check if amount has changed
+                if float(investment_entity.amount) != float(current_amount):
+                    if not existing_history:
+                        existing_history = [
+                            {
+                                'amount': float(current_amount),
+                                'date': date_str
+                            }
+                        ]
+                    existing_history.append({
+                        'amount': float(investment_entity.amount),
+                        'date': date_str
+                    })
+                elif not existing_history:
+                    existing_history = [
+                        {
+                            'amount': float(current_amount),
+                            'date': date_str
+                        }
+                    ]
+                
+                investment_entity.history = existing_history
+
                 if investment_entity.end_date:
                     investment_entity.end_date = datetime.fromisoformat(investment_entity.end_date.replace("Z", "+00:00"))
                 

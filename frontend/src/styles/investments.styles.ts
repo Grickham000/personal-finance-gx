@@ -200,4 +200,157 @@ export const getStyles = (colors: any) => StyleSheet.create({
     marginVertical: Spacing.sm,
     paddingHorizontal: Spacing.lg,
   },
+  
+  // Details view styles
+  detailsContent: {
+    padding: Spacing.lg,
+    paddingBottom: Spacing.xxl,
+  },
+  detailsHeader: {
+    alignItems: 'center',
+    marginBottom: Spacing.lg,
+  },
+  detailsName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#64748B',
+    marginBottom: 4,
+  },
+  detailsAmount: {
+    fontSize: 32,
+    fontWeight: '900',
+    marginBottom: 8,
+  },
+  detailsDesc: {
+    fontSize: 13,
+    textAlign: 'center',
+    paddingHorizontal: Spacing.md,
+  },
+  statsGrid: {
+    flexDirection: 'row',
+    gap: Spacing.md,
+    marginBottom: Spacing.lg,
+  },
+  statBox: {
+    flex: 1,
+    borderWidth: 1,
+    borderRadius: 16,
+    padding: Spacing.md,
+    alignItems: 'center',
+    gap: 6,
+  },
+  statLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  statValue: {
+    fontSize: 15,
+    fontWeight: '800',
+  },
+  
+  // History Performance Section styles
+  historySection: {
+    marginBottom: Spacing.xl,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    marginBottom: Spacing.md,
+  },
+  emptyHistory: {
+    paddingVertical: Spacing.lg,
+    alignItems: 'center',
+  },
+  timelineContainer: {
+    position: 'relative',
+    paddingLeft: Spacing.lg,
+  },
+  timelineLine: {
+    position: 'absolute',
+    left: 4,
+    top: 10,
+    bottom: 10,
+    width: 2,
+    borderRadius: 1,
+    opacity: 0.5,
+  },
+  timelineItem: {
+    position: 'relative',
+    marginBottom: Spacing.md,
+  },
+  timelineDot: {
+    position: 'absolute',
+    left: -20,
+    top: 14,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    borderWidth: 2,
+    zIndex: 1,
+  },
+  timelineCard: {
+    borderWidth: 1,
+    borderRadius: 16,
+    padding: Spacing.md,
+    gap: Spacing.xs,
+  },
+  timelineCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  timelineDate: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  changeBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  changeText: {
+    fontSize: 10,
+    fontWeight: '800',
+  },
+  timelineAmount: {
+    fontSize: 16,
+    fontWeight: '800',
+  },
+
+  // Actions styles
+  detailsActions: {
+    flexDirection: 'row',
+    gap: Spacing.md,
+    marginTop: Spacing.sm,
+  },
+  editButtonAction: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingVertical: 12,
+    gap: Spacing.xs,
+  },
+  editButtonTextAction: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  deleteButtonAction: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingVertical: 12,
+    gap: Spacing.xs,
+  },
+  deleteButtonTextAction: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
 });

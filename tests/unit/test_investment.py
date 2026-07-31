@@ -191,3 +191,109 @@ def test_controller_get_inv_filtered(mock_controller_inv_service):
     assert len(body) == 1
     assert body[0]["id"] == "id_99"
     mock_controller_inv_service.get_investments.assert_called_once_with("user_1", is_released=True, has_end_date=True)
+
+
+# =========================================================
+# 6. History Integration Tests
+# =========================================================
+def test_investment_history_toa_mapping():
+    history_data = [{"amount": 1000.0, "date": "2026-07-31T02:00:00Z"}]
+    dto = InvestmentDTO(
+        user_id="user_1",
+        name="Stock",
+        interest_rate=10.0,
+        amount=1000.0,
+        has_end_date=False,
+        id="inv_id_2",
+        history=history_data
+    )
+    toa = InvestmentTOA()
+    entity = toa.dto_to_entity(dto)
+    assert entity.history == history_data
+
+    mapped_dto = toa.entity_to_dto(entity)
+    assert mapped_dto.history == history_data
+
+def test_inv_dao_create_initializes_history(mock_inv_dao):
+    mock_ref = MagicMock()
+    mock_ref.id = "new_inv_id_history"
+    mock_inv_dao.db.collection.return_value.add.return_value = (None, mock_ref)
+
+    entity = InvestmentEntity("user_1", "Stock", 10.0, 1000.0, False, None, False, "")
+    mock_inv_dao.create_investment(entity)
+
+    # Assert history was auto-initialized
+    assert len(entity.history) == 1
+    assert entity.history[0]["amount"] == 1000.0
+    assert "date" in entity.history[0]
+
+def test_inv_dao_update_history_amount_changed(mock_inv_dao):
+    mock_doc = MagicMock()
+    mock_doc.exists = True
+    mock_doc.to_dict.return_value = {
+        "user_id": "user_1",
+        "name": "Stock",
+        "interest_rate": 10.0,
+        "amount": 1000.0,
+        "has_end_date": False,
+        "history": [{"amount": 1000.0, "date": "2026-07-31T01:00:00Z"}]
+    }
+    mock_inv_dao.db.collection.return_value.document.return_value.get.return_value = mock_doc
+
+    # Update with new amount: 1200.0
+    updated_entity = InvestmentEntity("user_1", "Stock", 10.0, 1200.0, False, None, False, "", history=[])
+    res = mock_inv_dao.update_investment(updated_entity, "inv_id_1")
+
+    assert res is True
+    # Should have old history + new entry
+    assert len(updated_entity.history) == 2
+    assert updated_entity.history[0]["amount"] == 1000.0
+    assert updated_entity.history[1]["amount"] == 1200.0
+
+def test_inv_dao_update_history_amount_same(mock_inv_dao):
+    mock_doc = MagicMock()
+    mock_doc.exists = True
+    mock_doc.to_dict.return_value = {
+        "user_id": "user_1",
+        "name": "Stock",
+        "interest_rate": 10.0,
+        "amount": 1000.0,
+        "has_end_date": False,
+        "history": [{"amount": 1000.0, "date": "2026-07-31T01:00:00Z"}]
+    }
+    mock_inv_dao.db.collection.return_value.document.return_value.get.return_value = mock_doc
+
+    # Update with same amount: 1000.0 (change interest_rate to 12.0)
+    updated_entity = InvestmentEntity("user_1", "Stock", 12.0, 1000.0, False, None, False, "", history=[])
+    res = mock_inv_dao.update_investment(updated_entity, "inv_id_1")
+
+    assert res is True
+    # History should remain unchanged
+    assert len(updated_entity.history) == 1
+    assert updated_entity.history[0]["amount"] == 1000.0
+
+
+def test_investment_from_dict_sorts_history_descending():
+    data = {
+        "user_id": "user_1",
+        "name": "Stock",
+        "interest_rate": 10.0,
+        "amount": 1000.0,
+        "has_end_date": False,
+        "history": [
+            {"amount": 1000.0, "date": "2026-07-30T10:00:00Z"},
+            {"amount": 1200.0, "date": "2026-07-31T12:00:00Z"},
+            {"amount": 1100.0, "date": "2026-07-31T02:00:00Z"}
+        ]
+    }
+    entity = InvestmentEntity.from_dict(data)
+    assert len(entity.history) == 3
+    # Newest should be index 0
+    assert entity.history[0]["date"] == "2026-07-31T12:00:00Z"
+    assert entity.history[0]["amount"] == 1200.0
+    # Middle should be index 1
+    assert entity.history[1]["date"] == "2026-07-31T02:00:00Z"
+    assert entity.history[1]["amount"] == 1100.0
+    # Oldest should be index 2
+    assert entity.history[2]["date"] == "2026-07-30T10:00:00Z"
+    assert entity.history[2]["amount"] == 1000.0

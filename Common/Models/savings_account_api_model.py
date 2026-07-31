@@ -1,9 +1,10 @@
 class SavingsAccountApiModel:
-    def __init__(self, name: str, interest_rate: float, balance: float = 0.0, description: str = ""):
+    def __init__(self, name: str, interest_rate: float, balance: float = 0.0, description: str = "", history: list = None):
         self.name = name
         self.interest_rate = interest_rate
         self.balance = balance
         self.description = description
+        self.history = history if history is not None else []
 
     @classmethod
     def from_dict(cls, data: dict):
@@ -14,6 +15,7 @@ class SavingsAccountApiModel:
         interest_rate = data.get('interest_rate')
         balance = data.get('balance', 0.0)
         description = data.get('description', "")
+        history = data.get('history', [])
 
         if not name:
             raise ValueError("name is required")
@@ -37,12 +39,16 @@ class SavingsAccountApiModel:
         if not isinstance(description, str):
             raise ValueError("description must be a string")
 
-        return cls(name=name.strip(), interest_rate=interest_rate, balance=balance, description=description.strip())
+        if not isinstance(history, list):
+            raise ValueError("history must be a list")
+
+        return cls(name=name.strip(), interest_rate=interest_rate, balance=balance, description=description.strip(), history=history)
 
     def to_dict(self):
         return {
             'name': self.name,
             'interest_rate': self.interest_rate,
             'balance': self.balance,
-            'description': self.description
+            'description': self.description,
+            'history': self.history
         }

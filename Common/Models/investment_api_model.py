@@ -1,7 +1,7 @@
 from datetime import datetime
 
 class InvestmentApiModel:
-    def __init__(self, name: str, interest_rate: float, amount: float, has_end_date: bool, end_date: str = None, is_released: bool = False, description: str = ""):
+    def __init__(self, name: str, interest_rate: float, amount: float, has_end_date: bool, end_date: str = None, is_released: bool = False, description: str = "", history: list = None):
         self.name = name
         self.interest_rate = interest_rate
         self.amount = amount
@@ -9,6 +9,7 @@ class InvestmentApiModel:
         self.end_date = end_date
         self.is_released = is_released
         self.description = description
+        self.history = history if history is not None else []
 
     @classmethod
     def from_dict(cls, data: dict):
@@ -22,6 +23,7 @@ class InvestmentApiModel:
         end_date = data.get('end_date')
         is_released = data.get('is_released', False)
         description = data.get('description', "")
+        history = data.get('history', [])
 
         if not name:
             raise ValueError("name is required")
@@ -70,6 +72,9 @@ class InvestmentApiModel:
         if not isinstance(description, str):
             raise ValueError("description must be a string")
 
+        if not isinstance(history, list):
+            raise ValueError("history must be a list")
+
         return cls(
             name=name.strip(),
             interest_rate=interest_rate,
@@ -77,7 +82,8 @@ class InvestmentApiModel:
             has_end_date=has_end_date,
             end_date=end_date,
             is_released=is_released,
-            description=description.strip()
+            description=description.strip(),
+            history=history
         )
 
     def to_dict(self):
@@ -88,5 +94,6 @@ class InvestmentApiModel:
             'has_end_date': self.has_end_date,
             'end_date': self.end_date,
             'is_released': self.is_released,
-            'description': self.description
+            'description': self.description,
+            'history': self.history
         }

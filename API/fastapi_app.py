@@ -66,6 +66,7 @@ class SavingsAccountCreateSchema(BaseModel):
     interest_rate: float = Field(..., description="Annual Interest Rate percentage", example=4.25)
     balance: float = Field(..., description="Current balance in the account", example=10000.0)
     description: Optional[str] = Field("", description="Description of the account savings purpose", example="Emergency Fund")
+    history: Optional[List[dict]] = Field(default=[], description="Savings balance history")
 
 class InvestmentCreateSchema(BaseModel):
     name: str = Field(..., description="Investment product name", example="Treasury Bill 6-Month")
@@ -75,6 +76,7 @@ class InvestmentCreateSchema(BaseModel):
     end_date: Optional[str] = Field(None, description="Maturity date if applicable", example="2026-12-16T12:00:00Z")
     is_released: bool = Field(..., description="Whether the investment has matured and funds are released", example=False)
     description: Optional[str] = Field("", description="Description of the investment", example="Short term government bond")
+    history: Optional[List[dict]] = Field(default=[], description="Investment amount history")
 
 # Helper to translate FastAPI request context to Azure Functions HTTP request object
 def adapt_request(request: Request, body_bytes: bytes = b"", route_params: dict = None, query_params: dict = None) -> func.HttpRequest:
