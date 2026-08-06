@@ -30,11 +30,14 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { getStyles } from '../../styles/credit_cards.styles';
 import { useCreditCards } from '../../hooks/useCreditCards';
 import { formatCurrency } from '../../utils/currency';
+import { DatePickerModal } from '../../components/DatePickerModal';
 
 export default function CreditCardsScreen() {
   const router = useRouter();
   const { colors } = useTheme();
   const styles = getStyles(colors);
+
+  const [paymentDatePickerVisible, setPaymentDatePickerVisible] = React.useState(false);
 
   const {
     profile,
@@ -422,13 +425,14 @@ export default function CreditCardsScreen() {
 
               <View style={styles.formGroup}>
                 <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Payment Date (YYYY-MM-DD)</Text>
-                <TextInput
-                  style={[styles.formInput, { color: colors.text, borderColor: colors.border }]}
-                  placeholder="YYYY-MM-DD"
-                  placeholderTextColor={colors.textMuted}
-                  value={paymentDate}
-                  onChangeText={setPaymentDate}
-                />
+                <TouchableOpacity
+                  style={[styles.formInput, { borderColor: colors.border, justifyContent: 'center' }]}
+                  onPress={() => setPaymentDatePickerVisible(true)}
+                >
+                  <Text style={{ color: paymentDate ? colors.text : colors.textMuted, fontSize: 15 }}>
+                    {paymentDate || "YYYY-MM-DD"}
+                  </Text>
+                </TouchableOpacity>
               </View>
 
               <TouchableOpacity 
@@ -446,6 +450,14 @@ export default function CreditCardsScreen() {
           </View>
         </View>
       </Modal>
+
+      <DatePickerModal
+        visible={paymentDatePickerVisible}
+        onClose={() => setPaymentDatePickerVisible(false)}
+        onSelectDate={setPaymentDate}
+        selectedDate={paymentDate}
+        colors={colors}
+      />
     </View>
   );
 }

@@ -15,10 +15,13 @@ import { Plus, Trash2, X, Landmark, PiggyBank, Percent, Edit2, Calendar, Trendin
 import { getStyles } from '../../styles/investments.styles';
 import { useInvestments } from '../../hooks/useInvestments';
 import { formatCurrency } from '../../utils/currency';
+import { DatePickerModal } from '../../components/DatePickerModal';
 
 export default function InvestmentsScreen() {
   const { colors } = useTheme();
   const styles = getStyles(colors);
+
+  const [invEndDatePickerVisible, setInvEndDatePickerVisible] = React.useState(false);
 
   const {
     profile,
@@ -711,13 +714,14 @@ export default function InvestmentsScreen() {
               {invHasEndDate && (
                 <View style={styles.formGroup}>
                   <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Maturity Date (YYYY-MM-DD)</Text>
-                  <TextInput
-                    style={[styles.formInput, { color: colors.text, borderColor: colors.border }]}
-                    placeholder="YYYY-MM-DD"
-                    placeholderTextColor={colors.textMuted}
-                    value={invEndDate}
-                    onChangeText={setInvEndDate}
-                  />
+                  <TouchableOpacity
+                    style={[styles.formInput, { borderColor: colors.border, justifyContent: 'center' }]}
+                    onPress={() => setInvEndDatePickerVisible(true)}
+                  >
+                    <Text style={{ color: invEndDate ? colors.text : colors.textMuted, fontSize: 15 }}>
+                      {invEndDate || "YYYY-MM-DD"}
+                    </Text>
+                  </TouchableOpacity>
                 </View>
               )}
 
@@ -749,6 +753,14 @@ export default function InvestmentsScreen() {
           </View>
         </View>
       </Modal>
+
+      <DatePickerModal
+        visible={invEndDatePickerVisible}
+        onClose={() => setInvEndDatePickerVisible(false)}
+        onSelectDate={setInvEndDate}
+        selectedDate={invEndDate}
+        colors={colors}
+      />
     </View>
   );
 }

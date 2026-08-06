@@ -43,16 +43,51 @@ def get_expenses(req: func.HttpRequest) -> func.HttpResponse:
         start_date = req.params.get('start_date')
         end_date = req.params.get('end_date')
 
-        # Delegate to service to retrieve expenses
+        # New filtering / pagination parameters
+        filter_type = req.params.get('filter_type')
+        target_date = req.params.get('target_date')
+        
+        paginate_str = req.params.get('paginate', '')
+        paginate = paginate_str.lower() in ('true', '1', 'yes')
+
+        # If paginating, default filter_type to 'month' if not explicitly passed
+        if paginate and not filter_type:
+            filter_type = 'month'
+
+        page = int(req.params.get('page', 1))
+        per_page = int(req.params.get('per_page', 20))
+
+        # Delegate to service to retrieve expenses passing arguments dynamically for backward compatibility
+        kwargs = {
+            "expense_type": expense_type,
+            "payment_method": payment_method,
+            "start_date": start_date,
+            "end_date": end_date
+        }
+        if filter_type is not None:
+            kwargs["filter_type"] = filter_type
+        if target_date is not None:
+            kwargs["target_date"] = target_date
+
         expenses_list = expense_service.get_expenses(
             user_id,
-            expense_type=expense_type,
-            payment_method=payment_method,
-            start_date=start_date,
-            end_date=end_date
+            **kwargs
         )
+
+        headers = {
+            'Content-Type': 'application/json'
+        }
+
+        if paginate:
+            from Common.Utils.pagination import Pagination
+            pagination = Pagination(expenses_list, page=page, per_page=per_page)
+            page_items = pagination.page_items
+            headers.update(pagination.get_headers())
+        else:
+            page_items = expenses_list
+
         # Convert each ExpenseDTO to a dictionary
-        expenses_dict_list = [expense.to_dict() for expense in expenses_list]
+        expenses_dict_list = [expense.to_dict() for expense in page_items]
 
         # Convert the list of dictionaries to JSON
         expenses_json = json.dumps(expenses_dict_list)
@@ -60,6 +95,7 @@ def get_expenses(req: func.HttpRequest) -> func.HttpResponse:
         return func.HttpResponse(
             body=expenses_json,
             status_code=200,
+            headers=headers,
             mimetype='application/json'  # Ensure the response is recognized as JSON
         )
     except Exception as e:

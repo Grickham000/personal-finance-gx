@@ -125,7 +125,7 @@ export const useInvestments = () => {
         interest_rate: parseFloat(invRate),
         amount: parseFloat(invAmount),
         has_end_date: invHasEndDate,
-        end_date: invHasEndDate && invEndDate ? new Date(invEndDate).toISOString() : null,
+        end_date: invHasEndDate && invEndDate ? `${invEndDate}T12:00:00` : null,
         is_released: editingInvestment ? editingInvestment.is_released : false,
         description: invDesc.trim()
       };

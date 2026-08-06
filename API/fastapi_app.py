@@ -161,6 +161,11 @@ async def get_expenses_endpoint(
     payment_method: Optional[str] = Query(None, description="Filter by payment method"),
     start_date: Optional[str] = Query(None, description="Filter by start date"),
     end_date: Optional[str] = Query(None, description="Filter by end date"),
+    filter_type: Optional[str] = Query(None, description="Filter type: month, week, day, range"),
+    target_date: Optional[str] = Query(None, description="Target date for filtering (e.g. YYYY-MM-DD or YYYY-MM)"),
+    paginate: Optional[bool] = Query(False, description="Whether to paginate the results"),
+    page: Optional[int] = Query(1, description="Page number"),
+    per_page: Optional[int] = Query(20, description="Items per page"),
     authorization: str = Header(..., description="Firebase Bearer Token"),
     code: Optional[str] = Query(None, description="Azure Functions host code")
 ):
@@ -169,6 +174,11 @@ async def get_expenses_endpoint(
         "payment_method": payment_method,
         "start_date": start_date,
         "end_date": end_date,
+        "filter_type": filter_type,
+        "target_date": target_date,
+        "paginate": paginate,
+        "page": page,
+        "per_page": per_page,
         "code": code
     }
     req = adapt_request(request, query_params=qp)

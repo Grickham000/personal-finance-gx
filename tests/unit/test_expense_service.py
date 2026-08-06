@@ -114,3 +114,45 @@ def test_delete_expense(expense_service):
 
     # Assertions
     expense_service.expense_dao.delete_expense.assert_called_once_with("user_id", "expense_id")
+
+def test_get_expenses_daily_filter(expense_service):
+    # Setup mock entities
+    ent1 = MagicMock(expense_date="2026-08-01T10:00:00Z", expense_type="food", payment_method="cash")
+    ent2 = MagicMock(expense_date="2026-08-02T10:00:00Z", expense_type="food", payment_method="cash")
+    expense_service.expense_dao.get_expenses.return_value = [ent1, ent2]
+    
+    # Target date: 2026-08-01
+    results = expense_service.get_expenses("user_id", filter_type="day", target_date="2026-08-01")
+    assert len(results) == 1
+
+def test_get_expenses_weekly_filter(expense_service):
+    # Setup mock entities
+    # 2026-08-01 is Saturday. Monday is 2026-07-27. Sunday is 2026-08-02.
+    ent1 = MagicMock(expense_date="2026-07-28T10:00:00Z", expense_type="food", payment_method="cash")
+    ent2 = MagicMock(expense_date="2026-07-26T10:00:00Z", expense_type="food", payment_method="cash")
+    expense_service.expense_dao.get_expenses.return_value = [ent1, ent2]
+
+    results = expense_service.get_expenses("user_id", filter_type="week", target_date="2026-08-01")
+    assert len(results) == 1
+
+def test_get_expenses_monthly_cutoff_filter(expense_service):
+    # Mock user profile with payment method cutoff
+    mock_profile = MagicMock()
+    mock_profile.payment_methods = [
+        {"id": "cc1_id", "name": "credit card1", "is_immediate": False, "cut_date": 16}
+    ]
+    expense_service.user_profile_dao.get_profile.return_value = mock_profile
+
+    # Mock entity 1: date is 2026-07-20 (> 16 cutoff, falls into August statement!)
+    ent1 = MagicMock(expense_date="2026-07-20T10:00:00Z", expense_type="food", payment_method="credit card1", payment_method_id="cc1_id")
+    # Mock entity 2: date is 2026-08-20 (> 16 cutoff, falls into September statement!)
+    ent2 = MagicMock(expense_date="2026-08-20T10:00:00Z", expense_type="food", payment_method="credit card1", payment_method_id="cc1_id")
+    # Mock entity 3: date is 2026-08-05 (<= 16 cutoff, falls into August statement!)
+    ent3 = MagicMock(expense_date="2026-08-05T10:00:00Z", expense_type="food", payment_method="credit card1", payment_method_id="cc1_id")
+
+    expense_service.expense_dao.get_expenses.return_value = [ent1, ent2, ent3]
+
+    # Target month: 2026-08
+    results = expense_service.get_expenses("user_id", filter_type="month", target_date="2026-08-01")
+    assert len(results) == 2
+

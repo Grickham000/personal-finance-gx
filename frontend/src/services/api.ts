@@ -99,6 +99,30 @@ export const apiService = {
     return response.data;
   },
 
+  getExpensesPaginated: async (filters?: {
+    expense_type?: string;
+    payment_method?: string;
+    start_date?: string;
+    end_date?: string;
+    filter_type?: string;
+    target_date?: string;
+    page?: number;
+    per_page?: number;
+  }) => {
+    const response = await apiClient.get('/expenses', { params: { ...filters, paginate: true } });
+    return {
+      data: response.data,
+      pagination: {
+        page: Number(response.headers['x-page'] || response.headers['X-Page'] || 1),
+        perPage: Number(response.headers['x-per-page'] || response.headers['X-Per-Page'] || 20),
+        totalCount: Number(response.headers['x-total-count'] || response.headers['X-Total-Count'] || 0),
+        totalPages: Number(response.headers['x-total-pages'] || response.headers['X-Total-Pages'] || 1),
+        hasNext: (response.headers['x-has-next'] || response.headers['X-Has-Next']) === 'true',
+        hasPrev: (response.headers['x-has-prev'] || response.headers['X-Has-Prev']) === 'true'
+      }
+    };
+  },
+
   createExpense: async (expenseData: {
     expense: number;
     expense_type: string;
