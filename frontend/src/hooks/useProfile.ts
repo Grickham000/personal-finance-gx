@@ -8,7 +8,8 @@ export const useProfile = () => {
   const [userName, setUserName] = useState('');
   const [monthlyIncome, setMonthlyIncome] = useState('');
   const [currency, setCurrency] = useState('USD');
-  const [categories, setCategories] = useState<string[]>(['food', 'transport', 'housing', 'services', 'entertainment', 'other']);
+  const [originalProfile, setOriginalProfile] = useState<any>(null);
+  const [categories, setCategories] = useState<string[]>([]);
   const [newCategory, setNewCategory] = useState('');
 
   const [paymentMethods, setPaymentMethods] = useState<any[]>([]);
@@ -23,22 +24,12 @@ export const useProfile = () => {
 
   const fetchProfile = useCallback(async () => {
     try {
-      const [profileData, expensesData] = await Promise.all([
-        apiService.getUserProfile().catch((err: any) => {
-          if (err.response?.status === 404 || (err.response?.data && typeof err.response.data === 'string' && err.response.data.includes('not found'))) {
-            return null;
-          }
-          throw err;
-        }),
-        apiService.getExpenses().catch((err: any) => {
-          console.warn('Failed to load expenses for categories:', err);
-          return [];
-        })
-      ]);
-
-      const expenseCategories: string[] = Array.from(
-        new Set((expensesData || []).map((exp: any) => exp.expense_type?.trim().toLowerCase()))
-      ).filter(Boolean) as string[];
+      const profileData = await apiService.getUserProfile().catch((err: any) => {
+        if (err.response?.status === 404 || (err.response?.data && typeof err.response.data === 'string' && err.response.data.includes('not found'))) {
+          return null;
+        }
+        throw err;
+      });
 
       if (profileData) {
         setProfileId(profileData.id);
@@ -47,15 +38,25 @@ export const useProfile = () => {
         setCurrency(profileData.currency || 'USD');
         
         const profileCategories = (profileData.expense_types || []).map((c: string) => c.trim().toLowerCase());
-        const mergedCategories = Array.from(new Set([...profileCategories, ...expenseCategories]));
-        setCategories(mergedCategories);
+        setCategories(profileCategories);
         setPaymentMethods(profileData.payment_methods || []);
+
+        setOriginalProfile({
+          userName: profileData.user_name || '',
+          monthlyIncome: String(profileData.monthly_income || '0'),
+          currency: profileData.currency || 'USD',
+          categories: profileCategories,
+          paymentMethods: profileData.payment_methods || []
+        });
       } else {
-        if (expenseCategories.length > 0) {
-          setCategories(expenseCategories);
-        } else {
-          setCategories(['food', 'transport', 'housing', 'services', 'entertainment', 'other']);
-        }
+        setCategories([]);
+        setOriginalProfile({
+          userName: '',
+          monthlyIncome: '',
+          currency: 'USD',
+          categories: [],
+          paymentMethods: []
+        });
       }
     } catch (err: any) {
       console.error('Failed to load profile:', err);
@@ -158,6 +159,43 @@ export const useProfile = () => {
     setPaymentMethods(paymentMethods.filter(pm => pm.id !== id));
   };
 
+  const isDirty = (() => {
+    if (!originalProfile) return false;
+    if (userName.trim() !== originalProfile.userName.trim()) return true;
+    if (monthlyIncome !== originalProfile.monthlyIncome) return true;
+    if (currency !== originalProfile.currency) return true;
+
+    const currentCats = [...categories].sort().join(',');
+    const origCats = [...originalProfile.categories].sort().join(',');
+    if (currentCats !== origCats) return true;
+
+    if (paymentMethods.length !== originalProfile.paymentMethods.length) return true;
+
+    const sortPMs = (pms: any[]) => 
+      [...pms].sort((a, b) => (a.id || a.name || '').localeCompare(b.id || b.name || ''));
+    
+    const currentPMsSorted = sortPMs(paymentMethods);
+    const origPMsSorted = sortPMs(originalProfile.paymentMethods);
+
+    for (let i = 0; i < currentPMsSorted.length; i++) {
+      const a = currentPMsSorted[i];
+      const b = origPMsSorted[i];
+      if (a.name !== b.name || a.is_immediate !== b.is_immediate || a.cut_date !== b.cut_date || a.days_to_pay !== b.days_to_pay) {
+        return true;
+      }
+    }
+    return false;
+  })();
+
+  const handleDiscardChanges = () => {
+    if (!originalProfile) return;
+    setUserName(originalProfile.userName);
+    setMonthlyIncome(originalProfile.monthlyIncome);
+    setCurrency(originalProfile.currency);
+    setCategories(originalProfile.categories);
+    setPaymentMethods(originalProfile.paymentMethods);
+  };
+
   return {
     userName,
     setUserName,
@@ -181,6 +219,8 @@ export const useProfile = () => {
     setPmModalVisible,
     loading,
     saving,
+    isDirty,
+    handleDiscardChanges,
     handleSaveProfile,
     handleAddCategory,
     handleRemoveCategory,

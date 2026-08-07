@@ -107,6 +107,8 @@ export default function ProfileScreen() {
     setPmModalVisible,
     loading,
     saving,
+    isDirty,
+    handleDiscardChanges,
     handleSaveProfile,
     handleAddCategory,
     handleRemoveCategory,
@@ -126,21 +128,49 @@ export default function ProfileScreen() {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
-        <Text style={[styles.title, { color: colors.text }]}>Settings Profile</Text>
-        <TouchableOpacity 
-          style={[styles.saveButtonHeader, { backgroundColor: colors.primary }]}
-          onPress={handleSaveProfile}
-          disabled={saving}
-        >
-          {saving ? (
-            <ActivityIndicator size="small" color="#FFF" />
-          ) : (
-            <>
-              <Save size={16} color="#FFF" />
-              <Text style={styles.saveButtonText}>Save</Text>
-            </>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          <Text style={[styles.title, { color: colors.text }]}>Settings Profile</Text>
+          {isDirty && (
+            <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: colors.danger }} />
           )}
-        </TouchableOpacity>
+        </View>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          {isDirty && (
+            <TouchableOpacity 
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                paddingHorizontal: Spacing.md,
+                paddingVertical: 8,
+                borderRadius: 8,
+                borderWidth: 1,
+                borderColor: colors.danger,
+                marginRight: Spacing.sm
+              }}
+              onPress={handleDiscardChanges}
+              disabled={saving}
+            >
+              <Text style={{ color: colors.danger, fontSize: 13, fontWeight: '700' }}>
+                Discard
+              </Text>
+            </TouchableOpacity>
+          )}
+
+          <TouchableOpacity 
+            style={[styles.saveButtonHeader, { backgroundColor: colors.primary }]}
+            onPress={handleSaveProfile}
+            disabled={saving}
+          >
+            {saving ? (
+              <ActivityIndicator size="small" color="#FFF" />
+            ) : (
+              <>
+                <Save size={16} color="#FFF" />
+                <Text style={styles.saveButtonText}>Save</Text>
+              </>
+            )}
+          </TouchableOpacity>
+        </View>
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
