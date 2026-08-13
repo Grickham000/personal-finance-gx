@@ -22,7 +22,8 @@ import {
   Trash2,
   KeyRound,
   LogOut,
-  Mail
+  Mail,
+  Send
 } from 'lucide-react-native';
 import { getStyles } from '../../styles/profile.styles';
 import { useProfile } from '../../hooks/useProfile';
@@ -246,7 +247,7 @@ export default function ProfileScreen() {
               onChangeText={setNewCategory}
             />
             <TouchableOpacity style={[styles.tagAddButton, { backgroundColor: colors.primary }]} onPress={handleAddCategory}>
-              <Plus size={18} color="#FFF" />
+              <Send size={18} color="#FFF" />
             </TouchableOpacity>
           </View>
 

@@ -394,7 +394,7 @@ export default function InvestmentsScreen() {
                       <View style={[styles.timelineLine, { backgroundColor: colors.border }]} />
                       
                       {(viewingSavings.history || [])
-                        .map((histItem, index, arr) => {
+                        .map((histItem: any, index: number, arr: any[]) => {
                           let changeInfo = null;
                           if (index < arr.length - 1) {
                             const prevBalance = arr[index + 1].balance;
@@ -549,7 +549,7 @@ export default function InvestmentsScreen() {
                       <View style={[styles.timelineLine, { backgroundColor: colors.border }]} />
                       
                       {(viewingInvestment.history || [])
-                        .map((histItem, index, arr) => {
+                        .map((histItem: any, index: number, arr: any[]) => {
                           let changeInfo = null;
                           if (index < arr.length - 1) {
                             const prevAmount = arr[index + 1].amount;
