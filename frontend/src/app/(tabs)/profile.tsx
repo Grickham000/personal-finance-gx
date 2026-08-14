@@ -390,17 +390,48 @@ export default function ProfileScreen() {
                 />
               </View>
 
-              <View style={[styles.formGroup, styles.switchContainer]}>
-                <View style={{ flex: 1, marginRight: Spacing.sm }}>
-                  <Text style={[styles.formLabel, { color: colors.textSecondary, marginBottom: 0 }]}>Is Immediate Payment?</Text>
-                  <Text style={{ fontSize: 11, color: colors.textMuted }}>Debit cards and cash clear immediately. Credit cards clear on a statement date.</Text>
+              <View style={styles.formGroup}>
+                <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Payment Type</Text>
+                <View style={styles.currencySelector}>
+                  <TouchableOpacity
+                    style={[
+                      styles.currencyOption,
+                      {
+                        borderColor: newPmIsImmediate ? colors.primary : colors.border,
+                        backgroundColor: newPmIsImmediate ? colors.primaryLight : 'transparent',
+                      },
+                    ]}
+                    onPress={() => setNewPmIsImmediate(true)}
+                  >
+                    <Text
+                      style={[
+                        styles.currencyOptionText,
+                        { color: newPmIsImmediate ? colors.primary : colors.textSecondary },
+                      ]}
+                    >
+                      Debit
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[
+                      styles.currencyOption,
+                      {
+                        borderColor: !newPmIsImmediate ? colors.primary : colors.border,
+                        backgroundColor: !newPmIsImmediate ? colors.primaryLight : 'transparent',
+                      },
+                    ]}
+                    onPress={() => setNewPmIsImmediate(false)}
+                  >
+                    <Text
+                      style={[
+                        styles.currencyOptionText,
+                        { color: !newPmIsImmediate ? colors.primary : colors.textSecondary },
+                      ]}
+                    >
+                      Credit
+                    </Text>
+                  </TouchableOpacity>
                 </View>
-                <Switch 
-                  value={newPmIsImmediate}
-                  onValueChange={setNewPmIsImmediate}
-                  trackColor={{ false: colors.border, true: colors.primary }}
-                  thumbColor="#FFF"
-                />
               </View>
 
               {!newPmIsImmediate && (
