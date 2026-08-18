@@ -8,7 +8,8 @@ import {
   Modal, 
   ActivityIndicator, 
   RefreshControl,
-  Platform
+  Platform,
+  Dimensions
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTheme } from '../../context/ThemeContext';
@@ -27,10 +28,26 @@ import {
   Sparkles
 } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useAuth } from '../../context/AuthContext';
 import { getStyles } from '../../styles/credit_cards.styles';
 import { useCreditCards } from '../../hooks/useCreditCards';
 import { formatCurrency } from '../../utils/currency';
 import { DatePickerModal } from '../../components/DatePickerModal';
+
+const { width: screenWidth } = Dimensions.get('window');
+const cardWidth = 291;
+const cardSpacing = 16; // Spacing.md
+
+const CARD_PALETTES = [
+  { id: 'indigo', name: 'Indigo Night', colors: ['#1E1B4B', '#312E81', '#4F46E5'] },
+  { id: 'emerald', name: 'Emerald Forest', colors: ['#064E3B', '#065F46', '#10B981'] },
+  { id: 'pink', name: 'Rose Petal', colors: ['#500724', '#831843', '#DB2777'] },
+  { id: 'amber', name: 'Amber Sunset', colors: ['#78350F', '#92400E', '#D97706'] },
+  { id: 'cyan', name: 'Ocean Breeze', colors: ['#083344', '#155E75', '#06B6D4'] },
+  { id: 'slate', name: 'Dark Slate', colors: ['#0F172A', '#1E293B', '#475569'] },
+  { id: 'purple', name: 'Royal Violet', colors: ['#3B0764', '#581C87', '#7C3AED'] },
+];
 
 export default function CreditCardsScreen() {
   const router = useRouter();
@@ -68,6 +85,59 @@ export default function CreditCardsScreen() {
     formatRawDate,
   } = useCreditCards();
 
+  const { user } = useAuth();
+  const [cardColors, setCardColors] = React.useState<Record<string, string>>({});
+  const scrollRef = React.useRef<ScrollView>(null);
+
+  React.useEffect(() => {
+    const loadCardColors = async () => {
+      try {
+        const storedColors = await AsyncStorage.getItem(`card_colors_${user?.uid}`);
+        if (storedColors) {
+          setCardColors(JSON.parse(storedColors));
+        }
+      } catch (err) {
+        console.error('Failed to load card colors:', err);
+      }
+    };
+    if (user?.uid) {
+      loadCardColors();
+    }
+  }, [user?.uid]);
+
+  const handleSelectPalette = async (paletteId: string) => {
+    if (!activeCardId) return;
+    const newColors = {
+      ...cardColors,
+      [activeCardId]: paletteId,
+    };
+    setCardColors(newColors);
+    try {
+      await AsyncStorage.setItem(`card_colors_${user?.uid}`, JSON.stringify(newColors));
+    } catch (err) {
+      console.error('Failed to save card colors:', err);
+    }
+  };
+
+  const getCardGradient = (cardId: string, index: number): readonly [string, string, ...string[]] => {
+    const paletteId = cardColors[cardId];
+    const palette = CARD_PALETTES.find(p => p.id === paletteId) || CARD_PALETTES[index % CARD_PALETTES.length];
+    return palette.colors as any;
+  };
+
+  // Scroll to active card when activeCardId changes (if triggered by click, etc.)
+  React.useEffect(() => {
+    if (activeCardId && creditCards.length > 0) {
+      const index = creditCards.findIndex((c: any) => (c.id || c.name) === activeCardId);
+      if (index !== -1 && scrollRef.current) {
+        scrollRef.current.scrollTo({
+          x: index * (cardWidth + cardSpacing),
+          animated: true,
+        });
+      }
+    }
+  }, [activeCardId, creditCards.length]);
+
   const statements = getStatementsForCard(activeCard);
 
   // Render loading screen
@@ -101,16 +171,6 @@ export default function CreditCardsScreen() {
     );
   }
 
-  const getCardGradient = (index: number): readonly [string, string, ...string[]] => {
-    const gradients: readonly [string, string, ...string[]][] = [
-      ['#1E1B4B', '#312E81', '#4F46E5'],
-      ['#064E3B', '#065F46', '#10B981'],
-      ['#500724', '#831843', '#DB2777'],
-      ['#78350F', '#92400E', '#D97706'],
-    ];
-    return gradients[index % gradients.length];
-  };
-
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
@@ -125,11 +185,27 @@ export default function CreditCardsScreen() {
         contentContainerStyle={styles.scrollContent}
       >
         <ScrollView 
+          ref={scrollRef}
           horizontal 
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.cardsSliderContent}
-          snapToInterval={296 + Spacing.md}
+          contentContainerStyle={[
+            styles.cardsSliderContent,
+            { 
+              paddingHorizontal: (screenWidth - cardWidth) / 2,
+              gap: cardSpacing
+            }
+          ]}
+          snapToInterval={cardWidth + cardSpacing}
+          snapToAlignment="center"
           decelerationRate="fast"
+          onMomentumScrollEnd={(event) => {
+            const offsetX = event.nativeEvent.contentOffset.x;
+            const index = Math.round(offsetX / (cardWidth + cardSpacing));
+            if (index >= 0 && index < creditCards.length) {
+              const card = creditCards[index];
+              setActiveCardId(card.id || card.name);
+            }
+          }}
         >
           {creditCards.map((card: any, idx: number) => {
             const isActive = (card.id || card.name) === activeCardId;
@@ -150,7 +226,7 @@ export default function CreditCardsScreen() {
                 ]}
               >
                 <LinearGradient
-                  colors={getCardGradient(idx)}
+                  colors={getCardGradient(card.id || card.name, idx)}
                   start={{ x: 0.1, y: 0.1 }}
                   end={{ x: 0.9, y: 0.9 }}
                   style={[
@@ -200,6 +276,41 @@ export default function CreditCardsScreen() {
             );
           })}
         </ScrollView>
+
+        {/* Card Personalization */}
+        <View style={styles.sectionHeaderRow}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Card Personalization</Text>
+          <Text style={[styles.sectionDetail, { color: colors.textSecondary }]}>Select a gradient style</Text>
+        </View>
+
+        <View style={[styles.personalizeContainer, { backgroundColor: colors.card, borderColor: colors.border }, Shadows.sm]}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.paletteScroll}>
+            {CARD_PALETTES.map((palette) => {
+              const cardColorsMap = cardColors || {};
+              const currentPaletteId = cardColorsMap[activeCardId || ''] || CARD_PALETTES[creditCards.findIndex((c: any) => (c.id || c.name) === activeCardId) % CARD_PALETTES.length]?.id;
+              const isSelected = currentPaletteId === palette.id;
+              return (
+                <TouchableOpacity
+                  key={palette.id}
+                  activeOpacity={0.7}
+                  style={[
+                    styles.paletteOption,
+                    { borderColor: isSelected ? colors.primary : colors.border }
+                  ]}
+                  onPress={() => handleSelectPalette(palette.id)}
+                >
+                  <LinearGradient
+                    colors={palette.colors as any}
+                    start={{ x: 0.1, y: 0.1 }}
+                    end={{ x: 0.9, y: 0.9 }}
+                    style={styles.paletteColorPreview}
+                  />
+                  <Text style={[styles.paletteName, { color: colors.text }]}>{palette.name}</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        </View>
 
         <View style={styles.sectionHeaderRow}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Billing Statements</Text>

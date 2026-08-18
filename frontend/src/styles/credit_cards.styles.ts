@@ -35,14 +35,14 @@ export const getStyles = (colors: any) => StyleSheet.create({
     paddingBottom: Spacing.md,
   },
   cardWrapper: {
-    width: 296,
+    width: 291,
     borderRadius: 20,
     overflow: 'hidden',
   },
   virtualCard: {
     borderRadius: 20,
     padding: Spacing.lg,
-    height: 180,
+    height: 175,
     justifyContent: 'space-between',
   },
   cardHeader: {
@@ -407,5 +407,33 @@ export const getStyles = (colors: any) => StyleSheet.create({
     textAlign: 'center',
     marginVertical: Spacing.sm,
     paddingHorizontal: Spacing.lg,
+  },
+  personalizeContainer: {
+    borderRadius: 20,
+    borderWidth: 1,
+    padding: Spacing.md,
+    marginBottom: Spacing.md,
+  },
+  paletteScroll: {
+    gap: Spacing.sm,
+    paddingVertical: 4,
+  },
+  paletteOption: {
+    borderWidth: 2,
+    borderRadius: 12,
+    padding: 6,
+    alignItems: 'center',
+    gap: 6,
+    minWidth: 80,
+  },
+  paletteColorPreview: {
+    width: 68,
+    height: 40,
+    borderRadius: 8,
+  },
+  paletteName: {
+    fontSize: 9,
+    fontWeight: '700',
+    textAlign: 'center',
   },
 });
