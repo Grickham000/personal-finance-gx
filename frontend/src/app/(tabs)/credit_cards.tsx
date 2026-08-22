@@ -25,7 +25,8 @@ import {
   ChevronDown, 
   ChevronUp, 
   ArrowDownRight,
-  Sparkles
+  Sparkles,
+  Palette
 } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -88,6 +89,13 @@ export default function CreditCardsScreen() {
   const { user } = useAuth();
   const [cardColors, setCardColors] = React.useState<Record<string, string>>({});
   const scrollRef = React.useRef<ScrollView>(null);
+  const [personalizeModalVisible, setPersonalizeModalVisible] = React.useState(false);
+  const [personalizingCardId, setPersonalizingCardId] = React.useState<string | null>(null);
+
+  const openPersonalizeModal = (cardId: string) => {
+    setPersonalizingCardId(cardId);
+    setPersonalizeModalVisible(true);
+  };
 
   React.useEffect(() => {
     const loadCardColors = async () => {
@@ -105,11 +113,12 @@ export default function CreditCardsScreen() {
     }
   }, [user?.uid]);
 
-  const handleSelectPalette = async (paletteId: string) => {
-    if (!activeCardId) return;
+  const handleSelectPalette = async (paletteId: string, cardId?: string) => {
+    const targetCardId = cardId || activeCardId;
+    if (!targetCardId) return;
     const newColors = {
       ...cardColors,
-      [activeCardId]: paletteId,
+      [targetCardId]: paletteId,
     };
     setCardColors(newColors);
     try {
@@ -139,6 +148,9 @@ export default function CreditCardsScreen() {
   }, [activeCardId, creditCards.length]);
 
   const statements = getStatementsForCard(activeCard);
+  const activeCardIndex = creditCards.findIndex((c: any) => (c.id || c.name) === activeCardId);
+  const activeCardGradient = getCardGradient(activeCardId || '', activeCardIndex !== -1 ? activeCardIndex : 0);
+  const activeCardAccentColor = activeCardGradient[activeCardGradient.length - 1];
 
   // Render loading screen
   if (loading && !refreshing) {
@@ -271,53 +283,30 @@ export default function CreditCardsScreen() {
                       }
                     </Text>
                   </View>
+
+                  <TouchableOpacity
+                    style={styles.paletteButton}
+                    onPress={(e) => {
+                      e.stopPropagation();
+                      openPersonalizeModal(card.id || card.name);
+                    }}
+                  >
+                    <Palette size={16} color="#FFF" />
+                  </TouchableOpacity>
                 </LinearGradient>
               </TouchableOpacity>
             );
           })}
         </ScrollView>
 
-        {/* Card Personalization */}
-        <View style={styles.sectionHeaderRow}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Card Personalization</Text>
-          <Text style={[styles.sectionDetail, { color: colors.textSecondary }]}>Select a gradient style</Text>
-        </View>
+        <View style={styles.bodyContainer}>
+          <View style={styles.sectionHeaderRow}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Billing Statements</Text>
+            <Text style={[styles.sectionDetail, { color: colors.textSecondary }]}>
+              Cut: Day {activeCard?.cut_date} • Due +{activeCard?.days_to_pay}d
+            </Text>
+          </View>
 
-        <View style={[styles.personalizeContainer, { backgroundColor: colors.card, borderColor: colors.border }, Shadows.sm]}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.paletteScroll}>
-            {CARD_PALETTES.map((palette) => {
-              const cardColorsMap = cardColors || {};
-              const currentPaletteId = cardColorsMap[activeCardId || ''] || CARD_PALETTES[creditCards.findIndex((c: any) => (c.id || c.name) === activeCardId) % CARD_PALETTES.length]?.id;
-              const isSelected = currentPaletteId === palette.id;
-              return (
-                <TouchableOpacity
-                  key={palette.id}
-                  activeOpacity={0.7}
-                  style={[
-                    styles.paletteOption,
-                    { borderColor: isSelected ? colors.primary : colors.border }
-                  ]}
-                  onPress={() => handleSelectPalette(palette.id)}
-                >
-                  <LinearGradient
-                    colors={palette.colors as any}
-                    start={{ x: 0.1, y: 0.1 }}
-                    end={{ x: 0.9, y: 0.9 }}
-                    style={styles.paletteColorPreview}
-                  />
-                  <Text style={[styles.paletteName, { color: colors.text }]}>{palette.name}</Text>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
-        </View>
-
-        <View style={styles.sectionHeaderRow}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Billing Statements</Text>
-          <Text style={[styles.sectionDetail, { color: colors.textSecondary }]}>
-            Cut: Day {activeCard?.cut_date} • Due +{activeCard?.days_to_pay}d
-          </Text>
-        </View>
 
         {statements.map((stmt) => {
           const isExpanded = !!expandedStatements[stmt.statementMonth];
@@ -345,7 +334,11 @@ export default function CreditCardsScreen() {
               key={stmt.statementMonth} 
               style={[
                 styles.statementBox, 
-                { backgroundColor: colors.card, borderColor: colors.border },
+                { 
+                  backgroundColor: colors.card, 
+                  borderColor: activeCardAccentColor,
+                  borderWidth: 1.5
+                },
                 Shadows.sm
               ]}
             >
@@ -496,7 +489,8 @@ export default function CreditCardsScreen() {
             ))
           )}
         </View>
-      </ScrollView>
+      </View>
+    </ScrollView>
 
       <Modal
         animationType="slide"
@@ -569,6 +563,120 @@ export default function CreditCardsScreen() {
         selectedDate={paymentDate}
         colors={colors}
       />
+
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={personalizeModalVisible}
+        onRequestClose={() => setPersonalizeModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { backgroundColor: colors.card }]}>
+            <View style={[styles.modalHeader, { borderBottomColor: colors.border }]}>
+              <View>
+                <Text style={[styles.modalTitle, { color: colors.text }]}>Personalize Card</Text>
+                <Text style={[styles.modalSubtitle, { color: colors.textSecondary }]}>
+                  Select a gradient theme for this card
+                </Text>
+              </View>
+              <TouchableOpacity onPress={() => setPersonalizeModalVisible(false)}>
+                <X size={20} color={colors.text} />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.formContent}>
+              {/* Live Preview Card */}
+              {(() => {
+                const personalizingCard = creditCards.find(
+                  (c: any) => (c.id || c.name) === personalizingCardId
+                );
+                if (!personalizingCard) return null;
+                const idx = creditCards.indexOf(personalizingCard);
+                return (
+                  <View style={styles.modalPreviewContainer}>
+                    <LinearGradient
+                      colors={getCardGradient(personalizingCardId || '', idx)}
+                      start={{ x: 0.1, y: 0.1 }}
+                      end={{ x: 0.9, y: 0.9 }}
+                      style={styles.modalVirtualCard}
+                    >
+                      <View style={styles.cardHeader}>
+                        <View style={styles.cardIconBox}>
+                          <CardIcon size={18} color="#FFF" />
+                        </View>
+                        <Text style={styles.cardLogo}>PREVIEW</Text>
+                      </View>
+                      <Text style={styles.cardName} numberOfLines={1}>
+                        {personalizingCard.name}
+                      </Text>
+                      <View style={styles.cardMetadata}>
+                        <View>
+                          <Text style={styles.cardMetaLabel}>STATEMENT CUT</Text>
+                          <Text style={styles.cardMetaValue}>Day {personalizingCard.cut_date}</Text>
+                        </View>
+                        <View style={{ alignItems: 'flex-end' }}>
+                          <Text style={styles.cardMetaLabel}>DAYS TO PAY</Text>
+                          <Text style={styles.cardMetaValue}>{personalizingCard.days_to_pay} Days</Text>
+                        </View>
+                      </View>
+                    </LinearGradient>
+                  </View>
+                );
+              })()}
+
+              {/* Scrollable list of gradients */}
+              <ScrollView style={styles.modalPaletteList} contentContainerStyle={styles.modalPaletteListContent}>
+                {CARD_PALETTES.map((palette) => {
+                  const cardColorsMap = cardColors || {};
+                  const currentPaletteId = cardColorsMap[personalizingCardId || ''] || 
+                    CARD_PALETTES[creditCards.findIndex((c: any) => (c.id || c.name) === personalizingCardId) % CARD_PALETTES.length]?.id;
+                  const isSelected = currentPaletteId === palette.id;
+
+                  return (
+                    <TouchableOpacity
+                      key={palette.id}
+                      activeOpacity={0.7}
+                      style={[
+                        styles.modalPaletteRow,
+                        { 
+                          backgroundColor: colors.background,
+                          borderColor: isSelected ? colors.primary : colors.border
+                        }
+                      ]}
+                      onPress={() => handleSelectPalette(palette.id, personalizingCardId || undefined)}
+                    >
+                      <LinearGradient
+                        colors={palette.colors as any}
+                        start={{ x: 0.1, y: 0.1 }}
+                        end={{ x: 0.9, y: 0.9 }}
+                        style={styles.modalPaletteColorPreview}
+                      />
+                      <View style={styles.modalPaletteTextContainer}>
+                        <Text style={[styles.modalPaletteName, { color: colors.text }]}>{palette.name}</Text>
+                        <Text style={[styles.modalPaletteColorsText, { color: colors.textSecondary }]}>
+                          {palette.colors.join(' → ')}
+                        </Text>
+                      </View>
+                      {isSelected && (
+                        <View style={[styles.modalSelectionIndicator, { backgroundColor: colors.primary }]}>
+                          <CheckCircle2 size={12} color="#FFF" />
+                        </View>
+                      )}
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+
+              <TouchableOpacity 
+                style={[styles.doneButton, { backgroundColor: colors.primary }]}
+                onPress={() => setPersonalizeModalVisible(false)}
+              >
+                <Text style={styles.doneButtonText}>Done</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }

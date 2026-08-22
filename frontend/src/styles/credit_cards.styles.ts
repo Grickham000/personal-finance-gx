@@ -26,13 +26,14 @@ export const getStyles = (colors: any) => StyleSheet.create({
     fontWeight: '500',
   },
   scrollContent: {
-    padding: Spacing.lg,
+    paddingVertical: Spacing.lg,
     paddingBottom: Spacing.xxl * 2,
   },
   cardsSliderContent: {
-    gap: Spacing.md,
-    paddingRight: Spacing.lg,
     paddingBottom: Spacing.md,
+  },
+  bodyContainer: {
+    paddingHorizontal: Spacing.lg,
   },
   cardWrapper: {
     width: 291,
@@ -435,5 +436,93 @@ export const getStyles = (colors: any) => StyleSheet.create({
     fontSize: 9,
     fontWeight: '700',
     textAlign: 'center',
+  },
+  paletteButton: {
+    position: 'absolute',
+    bottom: 16,
+    right: 16,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+    zIndex: 10,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.15,
+        shadowRadius: 3,
+      },
+      android: {
+        elevation: 3,
+      },
+    }),
+  },
+  modalPreviewContainer: {
+    alignItems: 'center',
+    marginVertical: Spacing.md,
+  },
+  modalVirtualCard: {
+    width: 291,
+    borderRadius: 20,
+    padding: Spacing.lg,
+    height: 175,
+    justifyContent: 'space-between',
+  },
+  modalPaletteList: {
+    maxHeight: 280,
+    marginTop: Spacing.sm,
+  },
+  modalPaletteListContent: {
+    gap: Spacing.sm,
+    paddingBottom: Spacing.md,
+  },
+  modalPaletteRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: Spacing.sm,
+    borderRadius: 14,
+    borderWidth: 1.5,
+  },
+  modalPaletteColorPreview: {
+    width: 60,
+    height: 36,
+    borderRadius: 8,
+  },
+  modalPaletteTextContainer: {
+    flex: 1,
+    marginLeft: Spacing.md,
+  },
+  modalPaletteName: {
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  modalPaletteColorsText: {
+    fontSize: 10,
+    marginTop: 2,
+    fontWeight: '500',
+  },
+  modalSelectionIndicator: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  doneButton: {
+    borderRadius: 12,
+    paddingVertical: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: Spacing.md,
+  },
+  doneButtonText: {
+    color: '#FFF',
+    fontSize: 14,
+    fontWeight: '700',
   },
 });
