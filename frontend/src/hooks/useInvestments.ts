@@ -8,6 +8,7 @@ export type SubTab = 'savings' | 'investments';
 export const useInvestments = () => {
   const [activeTab, setActiveTab] = useState<SubTab>('savings');
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   // Data states
@@ -58,8 +59,18 @@ export const useInvestments = () => {
       return null;
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   }, []);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await fetchData();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [fetchData]);
 
   useEffect(() => {
     fetchData();
@@ -290,6 +301,8 @@ export const useInvestments = () => {
     activeTab,
     setActiveTab,
     loading,
+    refreshing,
+    onRefresh,
     savings,
     investments,
     savingsModalVisible,

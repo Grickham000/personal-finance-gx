@@ -7,7 +7,8 @@ import {
   TextInput, 
   Modal, 
   ActivityIndicator, 
-  Switch
+  Switch,
+  RefreshControl
 } from 'react-native';
 import { useTheme } from '../../context/ThemeContext';
 import { Shadows, Spacing } from '../../constants/theme';
@@ -28,6 +29,8 @@ export default function InvestmentsScreen() {
     activeTab,
     setActiveTab,
     loading,
+    refreshing,
+    onRefresh,
     savings,
     investments,
     savingsModalVisible,
@@ -82,7 +85,7 @@ export default function InvestmentsScreen() {
     handleCloseSavingsDetailsModal,
   } = useInvestments();
 
-  if (loading) {
+  if (loading && !refreshing) {
     return (
       <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
         <ActivityIndicator size="large" color={colors.primary} />
@@ -127,7 +130,12 @@ export default function InvestmentsScreen() {
         </TouchableOpacity>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView 
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
+        }
+      >
         {activeTab === 'savings' ? (
           <>
             {/* Savings Hero Card */}

@@ -8,6 +8,7 @@ export type ExpenseTab = 'variable' | 'fixed';
 export const useExpenses = () => {
   const [activeTab, setActiveTab] = useState<ExpenseTab>('variable');
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   // Data states
@@ -119,6 +120,18 @@ export const useExpenses = () => {
       setLoading(false);
     }
   }, [selectedFilterCategory, filterType, targetDate, startDate, endDate, page, perPage]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await Promise.all([
+        fetchProfileAndFixed(),
+        fetchVariable()
+      ]);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [fetchProfileAndFixed, fetchVariable]);
 
   // Load initial static configuration
   useEffect(() => {
@@ -411,6 +424,8 @@ export const useExpenses = () => {
     activeTab,
     setActiveTab,
     loading,
+    refreshing,
+    onRefresh,
     submitting,
     selectedFilterCategory,
     setSelectedFilterCategory,

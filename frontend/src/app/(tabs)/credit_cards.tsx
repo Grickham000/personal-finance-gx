@@ -25,6 +25,7 @@ import {
   ChevronDown, 
   ChevronUp, 
   ArrowDownRight,
+  ArrowUpRight,
   Sparkles,
   Palette
 } from 'lucide-react-native';
@@ -431,7 +432,11 @@ export default function CreditCardsScreen() {
                       </Text>
                       
                       <View style={styles.expItemMetaRow}>
-                        <ArrowDownRight size={12} color={colors.danger} />
+                        {exp.expense < 0 ? (
+                          <ArrowDownRight size={12} color={colors.success} />
+                        ) : (
+                          <ArrowUpRight size={12} color={colors.danger} />
+                        )}
                         <Text style={[styles.expItemDate, { color: colors.textSecondary }]}>
                           {formatRawDate(exp.expense_date)} • {exp.expense_type}
                         </Text>

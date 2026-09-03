@@ -18,6 +18,7 @@ import {
   Plus, 
   LogOut, 
   ArrowUpRight, 
+  ArrowDownRight,
   CreditCard,
   AlertCircle
 } from 'lucide-react-native';
@@ -181,8 +182,12 @@ export default function DashboardScreen() {
                 </Text>
                 
                 <View style={styles.txMetaRow}>
-                  <View style={[styles.txIconContainer, { backgroundColor: colors.primaryLight }]}>
-                    <ArrowUpRight size={12} color={colors.primary} />
+                  <View style={[styles.txIconContainer, { backgroundColor: item.expense < 0 ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)' }]}>
+                    {item.expense < 0 ? (
+                      <ArrowDownRight size={12} color={colors.success} />
+                    ) : (
+                      <ArrowUpRight size={12} color={colors.danger} />
+                    )}
                   </View>
                   <Text style={[styles.txDate, { color: colors.textSecondary }]}>
                     {formatDate(item.expense_date)} • {item.payment_method}

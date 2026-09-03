@@ -8,7 +8,8 @@ import {
   ActivityIndicator, 
   Switch,
   Modal,
-  Alert
+  Alert,
+  RefreshControl
 } from 'react-native';
 import { useTheme } from '../../context/ThemeContext';
 import { Shadows, Spacing } from '../../constants/theme';
@@ -107,6 +108,8 @@ export default function ProfileScreen() {
     pmModalVisible,
     setPmModalVisible,
     loading,
+    refreshing,
+    onRefresh,
     saving,
     isDirty,
     handleDiscardChanges,
@@ -117,7 +120,7 @@ export default function ProfileScreen() {
     handleRemovePaymentMethod,
   } = useProfile();
 
-  if (loading) {
+  if (loading && !refreshing) {
     return (
       <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
         <ActivityIndicator size="large" color={colors.primary} />
@@ -174,7 +177,12 @@ export default function ProfileScreen() {
         </View>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView 
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
+        }
+      >
         {/* Core Profile Settings */}
         <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }, Shadows.sm]}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Personal Configuration</Text>

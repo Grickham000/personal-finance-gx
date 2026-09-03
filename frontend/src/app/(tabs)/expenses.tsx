@@ -9,11 +9,12 @@ import {
   ActivityIndicator, 
   FlatList,
   Switch,
-  Alert
+  Alert,
+  RefreshControl
 } from 'react-native';
 import { useTheme } from '../../context/ThemeContext';
 import { Spacing, Shadows } from '../../constants/theme';
-import { Plus, Trash2, Pencil, X, Filter, Calendar, Receipt, ChevronLeft, ChevronRight } from 'lucide-react-native';
+import { Plus, Trash2, Pencil, X, Filter, Calendar, Receipt, ChevronLeft, ChevronRight, ArrowUpRight, ArrowDownRight } from 'lucide-react-native';
 import { getStyles } from '../../styles/expenses.styles';
 import { useExpenses } from '../../hooks/useExpenses';
 import { formatCurrency } from '../../utils/currency';
@@ -28,6 +29,8 @@ export default function ExpensesScreen() {
     activeTab,
     setActiveTab,
     loading,
+    refreshing,
+    onRefresh,
     submitting,
     selectedFilterCategory,
     setSelectedFilterCategory,
@@ -101,7 +104,7 @@ export default function ExpensesScreen() {
   const [fixedEndDatePickerVisible, setFixedEndDatePickerVisible] = React.useState(false);
   const [variableDatePickerVisible, setVariableDatePickerVisible] = React.useState(false);
 
-  if (loading) {
+  if (loading && !refreshing) {
     return (
       <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
         <ActivityIndicator size="large" color={colors.primary} />
@@ -299,6 +302,9 @@ export default function ExpensesScreen() {
             data={filteredVariableExpenses}
             keyExtractor={(item) => item.id}
             contentContainerStyle={styles.listContent}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
+            }
             ListEmptyComponent={
               <View style={styles.emptyContainer}>
                 <Receipt size={48} color={colors.textMuted} />
@@ -322,9 +328,25 @@ export default function ExpensesScreen() {
                     <Text style={[styles.categoryBadge, { backgroundColor: colors.primaryLight, color: colors.primary }]}>
                       {item.expense_type}
                     </Text>
-                    <Text style={[styles.metaText, { color: colors.textSecondary }]}>
-                      {formatDate(item.expense_date)} • {item.payment_method}
-                    </Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                      <View style={{
+                        width: 18,
+                        height: 18,
+                        borderRadius: 6,
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        backgroundColor: item.expense < 0 ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)'
+                      }}>
+                        {item.expense < 0 ? (
+                          <ArrowDownRight size={11} color={colors.success} />
+                        ) : (
+                          <ArrowUpRight size={11} color={colors.danger} />
+                        )}
+                      </View>
+                      <Text style={[styles.metaText, { color: colors.textSecondary }]}>
+                        {formatDate(item.expense_date)} • {item.payment_method}
+                      </Text>
+                    </View>
                   </View>
                   <View style={styles.actionButtons}>
                     <TouchableOpacity 
@@ -401,6 +423,9 @@ export default function ExpensesScreen() {
           data={fixedExpenses}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.listContent}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
+          }
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <Receipt size={48} color={colors.textMuted} />
@@ -424,9 +449,25 @@ export default function ExpensesScreen() {
                   <Text style={[styles.categoryBadge, { backgroundColor: colors.primaryLight, color: colors.primary }]}>
                     {item.fexpense_type}
                   </Text>
-                  <Text style={[styles.metaText, { color: colors.textSecondary }]}>
-                    Starts: {formatDate(item.fexpense_start_date)} • Ends: {formatDate(item.fexpense_end_date)}
-                  </Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                    <View style={{
+                      width: 18,
+                      height: 18,
+                      borderRadius: 6,
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      backgroundColor: item.fixed_expense < 0 ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)'
+                    }}>
+                      {item.fixed_expense < 0 ? (
+                        <ArrowDownRight size={11} color={colors.success} />
+                      ) : (
+                        <ArrowUpRight size={11} color={colors.danger} />
+                      )}
+                    </View>
+                    <Text style={[styles.metaText, { color: colors.textSecondary }]}>
+                      Starts: {formatDate(item.fexpense_start_date)} • Ends: {formatDate(item.fexpense_end_date)}
+                    </Text>
+                  </View>
                 </View>
                 <View style={styles.actionButtons}>
                   <TouchableOpacity 

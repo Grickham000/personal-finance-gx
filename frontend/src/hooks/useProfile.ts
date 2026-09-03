@@ -20,6 +20,7 @@ export const useProfile = () => {
   const [pmModalVisible, setPmModalVisible] = useState(false);
 
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const fetchProfile = useCallback(async () => {
@@ -62,8 +63,18 @@ export const useProfile = () => {
       console.error('Failed to load profile:', err);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   }, []);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await fetchProfile();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [fetchProfile]);
 
   useEffect(() => {
     fetchProfile();
@@ -218,6 +229,8 @@ export const useProfile = () => {
     pmModalVisible,
     setPmModalVisible,
     loading,
+    refreshing,
+    onRefresh,
     saving,
     isDirty,
     handleDiscardChanges,
