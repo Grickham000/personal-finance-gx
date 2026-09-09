@@ -8,12 +8,11 @@ import {
   Modal, 
   ActivityIndicator, 
   RefreshControl,
-  Platform,
   Dimensions
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTheme } from '../../context/ThemeContext';
-import { Spacing, Shadows } from '../../constants/theme';
+import { Shadows } from '../../constants/theme';
 import { 
   CreditCard as CardIcon, 
   Calendar, 
@@ -27,7 +26,8 @@ import {
   ArrowDownRight,
   ArrowUpRight,
   Sparkles,
-  Palette
+  Palette,
+  Bell
 } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -36,6 +36,8 @@ import { getStyles } from '../../styles/credit_cards.styles';
 import { useCreditCards } from '../../hooks/useCreditCards';
 import { formatCurrency } from '../../utils/currency';
 import { DatePickerModal } from '../../components/DatePickerModal';
+import { CardAlarmModal } from '../../components/CardAlarmModal';
+import { CardAlarmConfig, getCardAlarms, getNextAlarmDate } from '../../services/alarmService';
 
 const { width: screenWidth } = Dimensions.get('window');
 const cardWidth = 291;
@@ -93,6 +95,29 @@ export default function CreditCardsScreen() {
   const [personalizeModalVisible, setPersonalizeModalVisible] = React.useState(false);
   const [personalizingCardId, setPersonalizingCardId] = React.useState<string | null>(null);
 
+  const [cardAlarms, setCardAlarms] = React.useState<Record<string, CardAlarmConfig>>({});
+  const [alarmModalVisible, setAlarmModalVisible] = React.useState(false);
+  const [alarmModalCard, setAlarmModalCard] = React.useState<any>(null);
+
+  const openAlarmModal = (card: any) => {
+    setAlarmModalCard(card);
+    setAlarmModalVisible(true);
+  };
+
+  const handleAlarmSaved = (updatedConfig: CardAlarmConfig | null) => {
+    if (!alarmModalCard) return;
+    const cardId = alarmModalCard.id || alarmModalCard.name;
+    setCardAlarms((prev) => {
+      const next = { ...prev };
+      if (updatedConfig) {
+        next[cardId] = updatedConfig;
+      } else {
+        delete next[cardId];
+      }
+      return next;
+    });
+  };
+
   const openPersonalizeModal = (cardId: string) => {
     setPersonalizingCardId(cardId);
     setPersonalizeModalVisible(true);
@@ -113,6 +138,20 @@ export default function CreditCardsScreen() {
       loadCardColors();
     }
   }, [user?.uid]);
+
+  React.useEffect(() => {
+    const loadAlarms = async () => {
+      try {
+        const alarms = await getCardAlarms(user?.uid);
+        setCardAlarms(alarms);
+      } catch (err) {
+        console.error('Failed to load card alarms:', err);
+      }
+    };
+    if (user?.uid) {
+      loadAlarms();
+    }
+  }, [user?.uid, refreshing]);
 
   const handleSelectPalette = async (paletteId: string, cardId?: string) => {
     const targetCardId = cardId || activeCardId;
@@ -285,15 +324,33 @@ export default function CreditCardsScreen() {
                     </Text>
                   </View>
 
-                  <TouchableOpacity
-                    style={styles.paletteButton}
-                    onPress={(e) => {
-                      e.stopPropagation();
-                      openPersonalizeModal(card.id || card.name);
-                    }}
-                  >
-                    <Palette size={16} color="#FFF" />
-                  </TouchableOpacity>
+                  <View style={styles.cardActionButtons}>
+                    <TouchableOpacity
+                      style={[
+                        styles.cardActionButton,
+                        cardAlarms[card.id || card.name]?.enabled && styles.cardActionButtonActive,
+                      ]}
+                      onPress={(e) => {
+                        e.stopPropagation();
+                        openAlarmModal(card);
+                      }}
+                    >
+                      <Bell size={15} color="#FFF" />
+                      {cardAlarms[card.id || card.name]?.enabled && (
+                        <View style={styles.alarmActiveDot} />
+                      )}
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={styles.cardActionButton}
+                      onPress={(e) => {
+                        e.stopPropagation();
+                        openPersonalizeModal(card.id || card.name);
+                      }}
+                    >
+                      <Palette size={15} color="#FFF" />
+                    </TouchableOpacity>
+                  </View>
                 </LinearGradient>
               </TouchableOpacity>
             );
@@ -307,6 +364,71 @@ export default function CreditCardsScreen() {
               Cut: Day {activeCard?.cut_date} • Due +{activeCard?.days_to_pay}d
             </Text>
           </View>
+
+          {(() => {
+            const activeCardAlarm = cardAlarms[activeCard?.id || activeCard?.name];
+            if (!activeCardAlarm?.enabled) return null;
+            const nextAlarm = getNextAlarmDate(
+              activeCard,
+              activeCardAlarm.triggerType,
+              activeCardAlarm.notifyHour,
+              activeCardAlarm.notifyMinute
+            );
+            const triggerLabel =
+              activeCardAlarm.triggerType === 'cutoff'
+                ? 'Cutoff Date'
+                : 'Last Day to Pay (Due Date)';
+            const formattedDate = nextAlarm.date.toLocaleDateString('en-US', {
+              weekday: 'short',
+              month: 'short',
+              day: 'numeric',
+            });
+            const period = activeCardAlarm.notifyHour >= 12 ? 'PM' : 'AM';
+            const displayHour =
+              activeCardAlarm.notifyHour % 12 === 0
+                ? 12
+                : activeCardAlarm.notifyHour % 12;
+            const formattedTime = `${displayHour}:00 ${period}`;
+
+            return (
+              <View
+                style={[
+                  styles.alarmBanner,
+                  { backgroundColor: colors.card, borderColor: colors.border },
+                  Shadows.sm,
+                ]}
+              >
+                <View
+                  style={[
+                    styles.alarmBannerIconBox,
+                    { backgroundColor: 'rgba(32, 138, 239, 0.15)' },
+                  ]}
+                >
+                  <Bell size={16} color={colors.primary} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.alarmBannerTitle, { color: colors.text }]}>
+                    Alarm Set: {triggerLabel} ({formattedTime})
+                  </Text>
+                  <Text style={[styles.alarmBannerSubtitle, { color: colors.textSecondary }]}>
+                    Next: {formattedDate}
+                    {nextAlarm.wasAdjusted ? ' • Business day adjusted (Friday)' : ''}
+                  </Text>
+                </View>
+                <TouchableOpacity
+                  style={[
+                    styles.alarmBannerEditBtn,
+                    { backgroundColor: colors.primaryLight || 'rgba(32, 138, 239, 0.15)' },
+                  ]}
+                  onPress={() => openAlarmModal(activeCard)}
+                >
+                  <Text style={[styles.alarmBannerEditText, { color: colors.primary }]}>
+                    Configure
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            );
+          })()}
 
 
         {statements.map((stmt) => {
@@ -682,6 +804,21 @@ export default function CreditCardsScreen() {
           </View>
         </View>
       </Modal>
+
+      {alarmModalCard && (
+        <CardAlarmModal
+          key={`${alarmModalCard.id || alarmModalCard.name}_${alarmModalVisible}`}
+          visible={alarmModalVisible}
+          onClose={() => setAlarmModalVisible(false)}
+          card={alarmModalCard}
+          userId={user?.uid}
+          initialConfig={
+            cardAlarms[alarmModalCard.id || alarmModalCard.name]
+          }
+          onAlarmSaved={handleAlarmSaved}
+          colors={colors}
+        />
+      )}
     </View>
   );
 }
