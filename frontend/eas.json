@@ -1,16 +1,37 @@
 {
   "cli": {
-    "version": ">= 12.0.0"
+    "version": ">= 12.0.0",
+    "appVersionSource": "remote"
   },
   "build": {
     "development": {
       "developmentClient": true,
-      "distribution": "internal"
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_API_BASE_URL": "https://personalfinancegx-cgctcugsgtfgfpew.eastus2-01.azurewebsites.net/api",
+        "EXPO_PUBLIC_FIREBASE_API_KEY": "AIzaSyCOiuoNDZSVv81ZEMVK4kEXdUpCbp-g-I0",
+        "EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN": "personalfinance-a0728.firebaseapp.com",
+        "EXPO_PUBLIC_FIREBASE_PROJECT_ID": "personalfinance-a0728",
+        "EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET": "personalfinance-a0728.firebasestorage.app",
+        "EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID": "356935283197",
+        "EXPO_PUBLIC_FIREBASE_APP_ID": "1:356935283197:web:69ec3dd7b2eaf2ae30a994",
+        "EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID": "G-BC1YE824L2"
+      }
     },
     "preview": {
       "distribution": "internal",
       "android": {
         "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_BASE_URL": "https://personalfinancegx-cgctcugsgtfgfpew.eastus2-01.azurewebsites.net/api",
+        "EXPO_PUBLIC_FIREBASE_API_KEY": "AIzaSyCOiuoNDZSVv81ZEMVK4kEXdUpCbp-g-I0",
+        "EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN": "personalfinance-a0728.firebaseapp.com",
+        "EXPO_PUBLIC_FIREBASE_PROJECT_ID": "personalfinance-a0728",
+        "EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET": "personalfinance-a0728.firebasestorage.app",
+        "EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID": "356935283197",
+        "EXPO_PUBLIC_FIREBASE_APP_ID": "1:356935283197:web:69ec3dd7b2eaf2ae30a994",
+        "EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID": "G-BC1YE824L2"
       }
     },
     "production": {}

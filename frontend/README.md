@@ -41,16 +41,43 @@ This command will move the starter code to the **app-example** directory and cre
 - If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
 - Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
 
-## Learn more
+## Firebase Configuration & Crash Prevention
 
-To learn more about developing your project with Expo, look at the following resources:
+> [!CAUTION]
+> **Critical — Missing Keys Cause Startup Crashes**:
+> The frontend relies on the Firebase Client SDK (`firebase/app`, `firebase/auth`) for authentication. If the Firebase configuration is missing or incomplete at compile time, `initializeAuth()` will throw an uncaught `FirebaseError: (auth/invalid-api-key)` error during startup, causing the standalone APK to **crash immediately upon launch**.
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+### Environment Variables (`.env`):
+```env
+EXPO_PUBLIC_API_BASE_URL=https://personalfinancegx-cgctcugsgtfgfpew.eastus2-01.azurewebsites.net/api
+EXPO_PUBLIC_FIREBASE_API_KEY=your_firebase_api_key
+EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
+EXPO_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
+EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET=your_project.firebasestorage.app
+EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+EXPO_PUBLIC_FIREBASE_APP_ID=your_app_id
+EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID=your_measurement_id
+```
 
-## Join the community
+### Why are these keys needed in builds?
+- In Expo / React Native, environment variables prefixed with `EXPO_PUBLIC_` are **inlined into the JavaScript bundle at compile time**.
+- In cloud builds (EAS Build), local `.env` is excluded because it is in `.gitignore`.
+- If not provided to EAS Build, the compiler inlines empty strings (`""`), causing the fatal `auth/invalid-api-key` crash.
 
-Join our community of developers creating universal apps.
+### How this is handled in the project:
+1. **`eas.json`**: The `env` block is defined under `preview` and `development` profiles so cloud builds have the configuration embedded.
+2. **`src/constants/config.ts`**: Fallback client values are provided so the app never initializes with empty credentials.
+3. **`src/services/auth.ts`**: `initializeApp` and `initializeAuth` are wrapped in defensive `try / catch` blocks to prevent uncaught runtime exceptions during app boot.
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+### Security Clarification
+- **Firebase Client Keys are NOT Secret**: In Firebase architecture, client identifiers (`apiKey`, `projectId`, `appId`) are public values embedded into client bundles by design. They identify the client to Google services.
+- **Backend Security**: Real secrets (Azure Function keys, Cosmos DB connection strings, and Firebase Admin SDK credentials) reside **only** in the backend Azure Function App (`personalFinanceGX`) and are never exposed to the frontend.
+
+## Building Standalone APK (EAS Build)
+
+To build a standalone installable `.apk` for Android:
+```bash
+npx eas-cli build --platform android --profile preview
+```
+Once the cloud build finishes, scan the QR code or open the download URL to install the `.apk` on your device.
+

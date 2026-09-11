@@ -5,17 +5,27 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { CONFIG } from '../constants/config';
 
 // Initialize Firebase App
-const app = getApps().length === 0 ? initializeApp(CONFIG.FIREBASE) : getApp();
+let app: any = null;
+try {
+  app = getApps().length === 0 ? initializeApp(CONFIG.FIREBASE) : getApp();
+} catch (err) {
+  console.error('Firebase initializeApp error:', err);
+}
 
 // Initialize Firebase Auth with React Native persistence to persist user logins
 const auth = (() => {
+  if (!app) return {} as any;
   try {
     return initializeAuth(app, {
       persistence: getReactNativePersistence(AsyncStorage)
     });
   } catch {
-    // Fallback if already initialized (hot reload)
-    return getAuth(app);
+    try {
+      return getAuth(app);
+    } catch (err) {
+      console.error('Firebase getAuth error:', err);
+      return {} as any;
+    }
   }
 })();
 

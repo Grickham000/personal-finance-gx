@@ -137,3 +137,52 @@ $env:AZURE_FUNCTION_KEY="your_azure_function_key_here"
 
 pytest tests/api/ --env=online -s
 ```
+
+---
+
+## Frontend & Mobile App Configuration
+
+The mobile frontend is built with **Expo (React Native)** located in the `frontend/` directory.
+
+### Firebase Client Configuration & Crash Prevention
+
+> [!CAUTION]
+> **Critical Requirement — Missing Keys Cause Startup Crashes**:
+> The frontend relies on the Firebase Client SDK (`firebase/app`, `firebase/auth`) to manage user authentication and session tokens. If the Firebase configuration is missing or incomplete at build time, `initializeAuth()` will throw an uncaught `FirebaseError: (auth/invalid-api-key)` error during startup, causing the standalone APK to **crash immediately upon launch**.
+
+#### Required Environment Variables (`frontend/.env`):
+```env
+EXPO_PUBLIC_API_BASE_URL=https://personalfinancegx-cgctcugsgtfgfpew.eastus2-01.azurewebsites.net/api
+EXPO_PUBLIC_FIREBASE_API_KEY=your_firebase_api_key
+EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
+EXPO_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
+EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET=your_project.firebasestorage.app
+EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+EXPO_PUBLIC_FIREBASE_APP_ID=your_app_id
+EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID=your_measurement_id
+```
+
+#### Why are these keys needed in builds?
+- In Expo / React Native, environment variables prefixed with `EXPO_PUBLIC_` are **inlined into the JavaScript bundle at compile time**.
+- When building in the cloud using **EAS Build** (`npx eas-cli build`), the local `.env` file is excluded because it is listed in `.gitignore`.
+- If the environment variables are not provided to EAS Build, the compiler inlines empty strings (`""`), which leads to the fatal `auth/invalid-api-key` crash when the APK is launched on a physical device.
+
+#### How this is handled in the project:
+1. **`frontend/eas.json`**: The `env` block is explicitly defined under the `preview` and `development` build profiles so cloud builds always have the necessary client configuration embedded.
+2. **`frontend/src/constants/config.ts`**: Fallback client values are provided so the app never attempts to initialize Firebase with empty credentials.
+3. **`frontend/src/services/auth.ts`**: `initializeApp` and `initializeAuth` are wrapped in defensive `try / catch` blocks to prevent uncaught runtime exceptions during app boot.
+
+#### Security Clarification for Developers
+- **Firebase Client Keys are NOT Secret**: In Firebase architecture, client identifiers (`apiKey`, `projectId`, `appId`) are public values embedded into web pages and mobile app binaries by design. They identify the client to Google services.
+- **Backend Security**: Real secrets (Azure Function master keys, Cosmos DB connection strings, and Firebase Admin SDK service account credentials) reside **only** in the backend Azure Function App (`personalFinanceGX`) and are never exposed to the frontend.
+- **Extra Protection**: You can restrict the API Key in the [Google Cloud Console](https://console.cloud.google.com/apis/credentials) to the specific Android package name (`com.personalfinance.gx`) and its SHA-1 signing fingerprint.
+
+### Building the Mobile App (Android APK)
+
+To build a standalone installable `.apk` for Android using EAS Build (no Android Studio required):
+```bash
+cd frontend
+npx eas-cli build --platform android --profile preview
+```
+Once the cloud build finishes, scan the QR code or click the download link to install the `.apk` on your Android device.
+

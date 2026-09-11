@@ -53,6 +53,14 @@ export function getNotifications(): any {
         }),
       });
     }
+    if (Platform.OS === 'android' && _notificationsModule?.setNotificationChannelAsync) {
+      _notificationsModule.setNotificationChannelAsync('default', {
+        name: 'Default',
+        importance: _notificationsModule.AndroidImportance?.MAX ?? 4,
+        vibrationPattern: [0, 250, 250, 250],
+        lightColor: '#208AEF',
+      });
+    }
   } catch (err) {
     console.warn('Failed to load expo-notifications:', err);
     _notificationsModule = null;
@@ -212,6 +220,7 @@ export async function scheduleCardNotification(
         },
       },
       trigger: {
+        channelId: 'default',
         type: Notifications.SchedulableTriggerInputTypes?.DATE || 'date',
         date: nextAlarm.date,
       },
@@ -323,6 +332,7 @@ export async function scheduleTestNotification(cardName: string): Promise<boolea
         sound: true,
       },
       trigger: {
+        channelId: 'default',
         type: Notifications.SchedulableTriggerInputTypes?.TIME_INTERVAL || 'timeInterval',
         seconds: 5,
       },
