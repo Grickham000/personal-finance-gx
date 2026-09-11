@@ -4,7 +4,7 @@ export const CONFIG = {
   
   // Firebase configuration loaded from environment variables securely
   FIREBASE: {
-    apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY || 'AIzaSyCOiuoNDZSVv81ZEMVK4kEXdUpCbp-g-I0',
+    apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY || '',
     authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN || 'personalfinance-a0728.firebaseapp.com',
     projectId: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID || 'personalfinance-a0728',
     storageBucket: process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET || 'personalfinance-a0728.firebasestorage.app',

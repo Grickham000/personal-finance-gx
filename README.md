@@ -150,6 +150,16 @@ The mobile frontend is built with **Expo (React Native)** located in the `fronte
 > **Critical Requirement — Missing Keys Cause Startup Crashes**:
 > The frontend relies on the Firebase Client SDK (`firebase/app`, `firebase/auth`) to manage user authentication and session tokens. If the Firebase configuration is missing or incomplete at build time, `initializeAuth()` will throw an uncaught `FirebaseError: (auth/invalid-api-key)` error during startup, causing the standalone APK to **crash immediately upon launch**.
 
+#### Security Policy: NEVER Commit API Keys to Git
+> [!WARNING]
+> **Zero-Commit Policy for API Keys**:
+> Under NO circumstances should any API key (`AIzaSy...`) be committed or pushed to the remote Git repository. Committing API keys triggers GitHub secret scanning blocks, creates security vulnerabilities, and exposes project quotas to scrapers.
+> 
+> - **Never hardcode keys** in `eas.json`, `config.ts`, or any other tracked file.
+> - **Local Development**: Stored only in `frontend/.env` and `local.settings.json` (both are strictly ignored by `.gitignore`).
+> - **EAS Cloud Builds**: Injected securely via **EAS Environment Variables** (`eas env:set`) or the Expo Dashboard under Project Settings -> Environment Variables. The key is injected into the build container during compilation without ever touching Git.
+> - **Backend Services**: Configured in Azure Function App application settings (`FIREBASE_API_KEY`) on `personalFinanceGX`.
+
 #### Required Environment Variables (`frontend/.env`):
 ```env
 EXPO_PUBLIC_API_BASE_URL=https://personalfinancegx-cgctcugsgtfgfpew.eastus2-01.azurewebsites.net/api
@@ -167,15 +177,18 @@ EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID=your_measurement_id
 - When building in the cloud using **EAS Build** (`npx eas-cli build`), the local `.env` file is excluded because it is listed in `.gitignore`.
 - If the environment variables are not provided to EAS Build, the compiler inlines empty strings (`""`), which leads to the fatal `auth/invalid-api-key` crash when the APK is launched on a physical device.
 
-#### How this is handled in the project:
-1. **`frontend/eas.json`**: The `env` block is explicitly defined under the `preview` and `development` build profiles so cloud builds always have the necessary client configuration embedded.
-2. **`frontend/src/constants/config.ts`**: Fallback client values are provided so the app never attempts to initialize Firebase with empty credentials.
-3. **`frontend/src/services/auth.ts`**: `initializeApp` and `initializeAuth` are wrapped in defensive `try / catch` blocks to prevent uncaught runtime exceptions during app boot.
+#### How this is handled securely:
+1. **EAS Environment Variables**: The key is stored in EAS Cloud (`eas env:set preview --name EXPO_PUBLIC_FIREBASE_API_KEY --visibility sensitive`). EAS injects it at build time.
+2. **`frontend/eas.json`**: Contains only non-secret project identifiers; sensitive API keys are omitted from `eas.json` so no secrets are committed to Git.
+3. **`frontend/src/constants/config.ts`**: Reads from `process.env.EXPO_PUBLIC_FIREBASE_API_KEY` without hardcoded fallback secrets.
+4. **`frontend/src/services/auth.ts`**: `initializeApp` and `initializeAuth` are wrapped in defensive `try / catch` blocks to prevent uncaught runtime exceptions during app boot.
 
-#### Security Clarification for Developers
-- **Firebase Client Keys are NOT Secret**: In Firebase architecture, client identifiers (`apiKey`, `projectId`, `appId`) are public values embedded into web pages and mobile app binaries by design. They identify the client to Google services.
-- **Backend Security**: Real secrets (Azure Function master keys, Cosmos DB connection strings, and Firebase Admin SDK service account credentials) reside **only** in the backend Azure Function App (`personalFinanceGX`) and are never exposed to the frontend.
-- **Extra Protection**: You can restrict the API Key in the [Google Cloud Console](https://console.cloud.google.com/apis/credentials) to the specific Android package name (`com.personalfinance.gx`) and its SHA-1 signing fingerprint.
+#### Security Clarification & Assessment for Developers
+- **Firebase Client Keys vs. Backend Secrets**: Firebase client API keys (`apiKey`) are client-side project identifiers, not administrative secrets. When bundled into an APK, any client-side key can be extracted via reverse engineering.
+- **Is building with this API key secure?**: Yes, **provided that**:
+  1. **Google Cloud Restrictions**: Restrict the API key in the [Google Cloud Console](https://console.cloud.google.com/apis/credentials) to the Android package `com.personalfinance.gx` and its release SHA-1 signing fingerprint.
+  2. **Firebase Security Rules**: All database and storage operations must enforce strict authentication rules. Never rely on API key secrecy for authorization.
+  3. **Backend Isolation**: Real secrets (Azure Function master keys, Cosmos DB credentials, Firebase Admin SDK service account JSON) reside **only** in the backend Azure Function App (`personalFinanceGX`) and are never exposed to the frontend.
 
 ### Building the Mobile App (Android APK)
 
