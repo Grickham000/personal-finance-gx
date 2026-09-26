@@ -4,6 +4,8 @@ from DL.expense_dao import ExpenseDAO
 from DL.user_profile_dao import UserProfileDAO
 from API.expense_dto import ExpenseDTO
 import logging
+from datetime import datetime, date, timedelta
+import calendar
 
 class ExpenseService:
     def __init__(self):
@@ -47,9 +49,6 @@ class ExpenseService:
                      filter_type=None, target_date=None, start_date=None, end_date=None) -> list:
         # Delegate to DAO to retrieve expenses
         expenses_entities = self.expense_dao.get_expenses(user_id)
-
-        from datetime import datetime, timedelta
-        import calendar
 
         # Resolve target date or fallback to current local/system time
         now = datetime.now()

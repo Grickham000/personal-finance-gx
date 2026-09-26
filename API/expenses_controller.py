@@ -103,6 +103,7 @@ def get_expenses(req: func.HttpRequest) -> func.HttpResponse:
             mimetype='application/json'  # Ensure the response is recognized as JSON
         )
     except Exception as e:
+        logging.error(f"Failed to retrieve expenses: {str(e)}", exc_info=True)
         return func.HttpResponse(
             body=f"Failed to retrieve expenses: {str(e)}",
             status_code=400,
