@@ -164,6 +164,25 @@ class ExpenseService:
 
             filtered_entities.append(entity)
 
+        # Sort filtered entities in descending chronological order (newest first)
+        def _parse_expense_date(ent):
+            val = getattr(ent, 'expense_date', None)
+            if isinstance(val, (datetime, date)):
+                if isinstance(val, datetime):
+                    return val
+                return datetime.combine(val, datetime.min.time())
+            if isinstance(val, str):
+                try:
+                    return datetime.fromisoformat(val.replace('Z', ''))
+                except Exception:
+                    try:
+                        return datetime.strptime(val, "%Y-%m-%d %H:%M:%S")
+                    except Exception:
+                        pass
+            return datetime.min
+
+        filtered_entities.sort(key=_parse_expense_date, reverse=True)
+
         # Transform entities to DTOs
         return [self.expense_toa.entity_to_dto(expense) for expense in filtered_entities]
 

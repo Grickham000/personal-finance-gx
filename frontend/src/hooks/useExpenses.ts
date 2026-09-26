@@ -15,6 +15,7 @@ export const useExpenses = () => {
   const [profile, setProfile] = useState<any>(null);
   const [variableExpenses, setVariableExpenses] = useState<any[]>([]);
   const [fixedExpenses, setFixedExpenses] = useState<any[]>([]);
+  const [filteredTotalAmount, setFilteredTotalAmount] = useState(0);
 
   // Filter & Date states (for variable expenses)
   const [selectedFilterCategory, setSelectedFilterCategory] = useState('');
@@ -112,8 +113,18 @@ export const useExpenses = () => {
         per_page: perPage
       });
 
-      setVariableExpenses(res.data);
+      const sorted = (res.data || []).sort(
+        (a: any, b: any) => new Date(b.expense_date).getTime() - new Date(a.expense_date).getTime()
+      );
+      setVariableExpenses(sorted);
       setPaginationInfo(res.pagination);
+
+      if (res.pagination?.totalAmount !== undefined && !isNaN(res.pagination.totalAmount)) {
+        setFilteredTotalAmount(res.pagination.totalAmount);
+      } else {
+        const localSum = sorted.reduce((sum: number, item: any) => sum + (Number(item.expense) || 0), 0);
+        setFilteredTotalAmount(localSum);
+      }
     } catch (err) {
       console.error('Error fetching variable expenses:', err);
     } finally {
@@ -430,6 +441,7 @@ export const useExpenses = () => {
     selectedFilterCategory,
     setSelectedFilterCategory,
     filteredVariableExpenses,
+    filteredTotalAmount,
     fixedExpenses,
 
     // Variable Modal Form

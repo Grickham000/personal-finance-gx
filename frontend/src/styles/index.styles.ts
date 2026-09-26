@@ -130,6 +130,51 @@ export const getStyles = (colors: Record<ThemeColor, string>) => StyleSheet.crea
     fontSize: 16,
     fontWeight: '800',
   },
+  creditDebtCard: {
+    borderRadius: 20,
+    borderWidth: 1,
+    padding: Spacing.md,
+    marginBottom: Spacing.lg,
+  },
+  creditDebtHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  creditDebtTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  creditDebtSubtitle: {
+    fontSize: 11,
+    marginTop: 2,
+  },
+  creditDebtTotalAmount: {
+    fontSize: 18,
+    fontWeight: '900',
+  },
+  creditDebtDivider: {
+    height: 1,
+    marginVertical: Spacing.sm,
+  },
+  creditDebtFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  creditDebtBreakdownItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  breakdownLabel: {
+    fontSize: 11,
+    fontWeight: '500',
+  },
+  breakdownValue: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
   actionSection: {
     marginBottom: Spacing.xl,
   },

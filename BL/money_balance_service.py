@@ -179,6 +179,58 @@ class MoneyBalanceService:
         total_expenses = total_immediate_expenses + total_credit_expenses_due + total_fixed_expenses + total_credit_payments_made
         remaining_balance = monthly_income - total_expenses
 
+        # Compute total unpaid credit card debt across all cards and billing cycles
+        cc_expenses_by_cycle = {}
+        for exp in expenses:
+            exp_amount = float(exp.expense)
+            exp_date_str = str(exp.expense_date).replace('Z', '')
+            try:
+                exp_date = datetime.fromisoformat(exp_date_str)
+            except Exception:
+                continue
+
+            pm_config = None
+            pm_id = getattr(exp, 'payment_method_id', None)
+            if pm_id:
+                pm_config = pm_by_id.get(pm_id)
+            if not pm_config and exp.payment_method:
+                pm_config = pm_by_name.get(exp.payment_method.lower())
+
+            if pm_config and not pm_config.get('is_immediate', False):
+                cut_date_day = pm_config.get('cut_date', 0)
+                if exp_date.day <= cut_date_day:
+                    c_year, c_month = exp_date.year, exp_date.month
+                else:
+                    if exp_date.month == 12:
+                        c_year, c_month = exp_date.year + 1, 1
+                    else:
+                        c_year, c_month = exp_date.year, exp_date.month + 1
+                stmt_month = f"{c_year:04d}-{c_month:02d}"
+                card_key = pm_config.get('id') or pm_config.get('name').lower()
+                cc_expenses_by_cycle[(card_key, stmt_month)] = cc_expenses_by_cycle.get((card_key, stmt_month), 0.0) + exp_amount
+
+        cc_payments_by_cycle = {}
+        for pay in cc_payments:
+            pay_card = pay.payment_method_id or ""
+            stmt_month = pay.statement_month or ""
+            pm_config = pm_by_id.get(pay_card)
+            if pm_config:
+                norm_key = pm_config.get('id') or pm_config.get('name').lower()
+            else:
+                norm_key = pay_card.lower() if pay_card else ""
+            cc_payments_by_cycle[(norm_key, stmt_month)] = cc_payments_by_cycle.get((norm_key, stmt_month), 0.0) + float(pay.amount_paid)
+
+        unpaid_credit_card_debt = 0.0
+        for cycle_key, spent_amount in cc_expenses_by_cycle.items():
+            paid_amount = cc_payments_by_cycle.get(cycle_key, 0.0)
+            remaining = max(0.0, spent_amount - paid_amount)
+            unpaid_credit_card_debt += remaining
+
+        # Realized cash outflows leaving user accounts this month (cash + fixed + CC payments made)
+        total_realized_outflows = total_immediate_expenses + total_fixed_expenses + total_credit_payments_made
+        # Total committed spent: Realized out-of-pocket + All unpaid credit card debt
+        total_spent_with_credit = total_realized_outflows + unpaid_credit_card_debt
+
         return {
             "monthly_income": monthly_income,
             "total_income": monthly_income,
@@ -189,5 +241,8 @@ class MoneyBalanceService:
             "total_expenses": total_expenses,
             "remaining_balance": remaining_balance,
             "cash_flow": remaining_balance,
-            "target_month": target_month_str
+            "target_month": target_month_str,
+            "unpaid_credit_card_debt": round(unpaid_credit_card_debt, 2),
+            "total_spent_with_credit": round(total_spent_with_credit, 2),
+            "cash_flow_with_credit": round(monthly_income - total_spent_with_credit, 2)
         }

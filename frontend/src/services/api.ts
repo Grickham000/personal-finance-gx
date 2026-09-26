@@ -118,7 +118,8 @@ export const apiService = {
         totalCount: Number(response.headers['x-total-count'] || response.headers['X-Total-Count'] || 0),
         totalPages: Number(response.headers['x-total-pages'] || response.headers['X-Total-Pages'] || 1),
         hasNext: (response.headers['x-has-next'] || response.headers['X-Has-Next']) === 'true',
-        hasPrev: (response.headers['x-has-prev'] || response.headers['X-Has-Prev']) === 'true'
+        hasPrev: (response.headers['x-has-prev'] || response.headers['X-Has-Prev']) === 'true',
+        totalAmount: Number(response.headers['x-total-amount'] || response.headers['X-Total-Amount'] || 0)
       }
     };
   },

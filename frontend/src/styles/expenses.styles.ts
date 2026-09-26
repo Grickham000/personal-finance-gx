@@ -238,4 +238,42 @@ export const getStyles = (colors: any) => StyleSheet.create({
   fixedDateItem: {
     flex: 1,
   },
+  summaryBanner: {
+    marginHorizontal: Spacing.lg,
+    marginTop: Spacing.sm,
+    marginBottom: Spacing.xs,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 12,
+    borderRadius: 14,
+    borderWidth: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  summaryLeft: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  summaryRight: {
+    alignItems: 'flex-end',
+    justifyContent: 'center',
+  },
+  summaryLabel: {
+    fontSize: 13,
+    fontWeight: '700',
+    textTransform: 'capitalize',
+  },
+  summaryPeriod: {
+    fontSize: 11,
+    marginTop: 2,
+  },
+  summaryAmount: {
+    fontSize: 17,
+    fontWeight: '800',
+  },
+  summaryCount: {
+    fontSize: 11,
+    fontWeight: '600',
+    marginTop: 2,
+  },
 });

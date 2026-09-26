@@ -11,7 +11,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
-import { Shadows } from '../../constants/theme';
+import { Spacing, Shadows } from '../../constants/theme';
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -36,6 +36,8 @@ export default function DashboardScreen() {
   const {
     profile,
     balance,
+    unpaidCreditDebt,
+    totalSpentWithCredit,
     recentExpenses,
     loading,
     refreshing,
@@ -139,6 +141,47 @@ export default function DashboardScreen() {
             </Text>
           </View>
         </View>
+
+        {/* Total Committed Spending Card (Adding Credit Card Debt) */}
+        <TouchableOpacity 
+          style={[styles.creditDebtCard, { backgroundColor: colors.glassBg, borderColor: colors.glassBorder }, Shadows.sm]}
+          onPress={() => router.push('/(tabs)/credit_cards')}
+          activeOpacity={0.8}
+        >
+          <View style={styles.creditDebtHeader}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.xs }}>
+              <View style={[styles.statIconContainer, { backgroundColor: 'rgba(234, 88, 12, 0.12)', marginBottom: 0 }]}>
+                <CreditCard size={18} color="#EA580C" />
+              </View>
+              <View>
+                <Text style={[styles.creditDebtTitle, { color: colors.text }]}>Total Spent (incl. CC Debt)</Text>
+                <Text style={[styles.creditDebtSubtitle, { color: colors.textSecondary }]}>
+                  Adding unpaid credit card debt
+                </Text>
+              </View>
+            </View>
+            <Text style={[styles.creditDebtTotalAmount, { color: colors.danger }]}>
+              {formatCurrency(totalSpentWithCredit, profile?.currency)}
+            </Text>
+          </View>
+
+          <View style={[styles.creditDebtDivider, { backgroundColor: colors.border }]} />
+
+          <View style={styles.creditDebtFooter}>
+            <View style={styles.creditDebtBreakdownItem}>
+              <Text style={[styles.breakdownLabel, { color: colors.textMuted }]}>Realized Outflows:</Text>
+              <Text style={[styles.breakdownValue, { color: colors.textSecondary }]}>
+                {formatCurrency(balance.total_expenses, profile?.currency)}
+              </Text>
+            </View>
+            <View style={styles.creditDebtBreakdownItem}>
+              <Text style={[styles.breakdownLabel, { color: '#EA580C' }]}>Unpaid CC Debt:</Text>
+              <Text style={[styles.breakdownValue, { color: '#EA580C', fontWeight: '700' }]}>
+                +{formatCurrency(unpaidCreditDebt, profile?.currency)}
+              </Text>
+            </View>
+          </View>
+        </TouchableOpacity>
 
         {/* Action Button Section */}
         <View style={styles.actionSection}>

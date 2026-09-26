@@ -35,6 +35,7 @@ export default function ExpensesScreen() {
     selectedFilterCategory,
     setSelectedFilterCategory,
     filteredVariableExpenses,
+    filteredTotalAmount,
     fixedExpenses,
 
     // Variable Modal Form
@@ -296,6 +297,34 @@ export default function ExpensesScreen() {
               </ScrollView>
             </View>
           )}
+
+          {/* Summary Banner for Current Filter & Period */}
+          <View style={[styles.summaryBanner, { backgroundColor: colors.glassBg, borderColor: colors.glassBorder }, Shadows.sm]}>
+            <View style={styles.summaryLeft}>
+              <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>
+                {selectedFilterCategory ? `${selectedFilterCategory} Total` : 'Period Expenses'}
+              </Text>
+              <Text style={[styles.summaryPeriod, { color: colors.textMuted }]}>
+                {filterType === 'month' ? (
+                  new Date(targetDate + 'T12:00:00').toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+                ) : filterType === 'week' ? (
+                  `Week of ${new Date(targetDate + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
+                ) : filterType === 'day' ? (
+                  new Date(targetDate + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                ) : (
+                  startDate && endDate ? `${startDate} to ${endDate}` : 'Custom Range'
+                )}
+              </Text>
+            </View>
+            <View style={styles.summaryRight}>
+              <Text style={[styles.summaryAmount, { color: filteredTotalAmount < 0 ? colors.success : colors.danger }]}>
+                {filteredTotalAmount < 0 ? '+' : '-'}{formatCurrency(Math.abs(filteredTotalAmount), profile?.currency)}
+              </Text>
+              <Text style={[styles.summaryCount, { color: colors.primary }]}>
+                {paginationInfo.totalCount} {paginationInfo.totalCount === 1 ? 'record' : 'records'}
+              </Text>
+            </View>
+          </View>
 
           {/* Variable Expenses List */}
           <FlatList

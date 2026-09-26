@@ -78,9 +78,13 @@ def get_expenses(req: func.HttpRequest) -> func.HttpResponse:
             'Content-Type': 'application/json'
         }
 
+        # Calculate total sum of all filtered expenses matching the query (before pagination)
+        total_amount = sum(float(getattr(exp, 'expense', 0.0) or 0.0) for exp in expenses_list)
+        headers['X-Total-Amount'] = str(round(total_amount, 2))
+
         if paginate:
             from Common.Utils.pagination import Pagination
-            pagination = Pagination(expenses_list, page=page, per_page=per_page)
+            pagination = Pagination(expenses_list, page=page, per_page=per_page, total_amount=total_amount)
             page_items = pagination.page_items
             headers.update(pagination.get_headers())
         else:
