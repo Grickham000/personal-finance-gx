@@ -601,3 +601,15 @@ async def custom_redoc_ui():
     </html>
     """
     return HTMLResponse(html_content)
+
+
+@fastapi_app.get("/", tags=["Health"], include_in_schema=False)
+@fastapi_app.get("/api/health", tags=["Health"], description="Service health check and diagnostic endpoint.")
+async def health_check():
+    import firebase_admin
+    return {
+        "status": "healthy",
+        "service": "personal-finance-gx",
+        "firebase_initialized": bool(firebase_admin._apps)
+    }
+

@@ -10,3 +10,11 @@ requests
 fastapi
 pydantic
 email-validator
+
+# Pin protobuf stack to version 5.x to maintain compatibility with Azure Functions Python worker (5.29.x)
+protobuf>=5.29.0,<6.0.0dev
+googleapis-common-protos<1.75.0
+proto-plus<1.26.0
+grpcio-status<1.72.0
+google-api-core<2.30.0
+google-cloud-firestore<2.26.0
