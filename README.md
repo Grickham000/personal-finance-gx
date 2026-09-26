@@ -199,3 +199,62 @@ npx eas-cli build --platform android --profile preview
 ```
 Once the cloud build finishes, scan the QR code or click the download link to install the `.apk` on your Android device.
 
+---
+
+## Azure Functions Backend: Dependency Management & Protobuf Architecture
+
+### The Azure Functions Python Worker & Protobuf Constraint
+Azure Functions on Linux (both Flex Consumption and Consumption) runs the Python worker inside the host environment (`/azure-functions-host/workers/python/3.12/LINUX/X64`). 
+
+The host communicates with the Python worker via **gRPC and Google Protocol Buffers (Protobuf)**. Because of this architecture:
+1. The host pre-loads its own `google.protobuf` runtime into memory (`sys.modules['google.protobuf']`) **before** any application code or third-party packages in `.python_packages` are imported.
+2. The pre-loaded host runtime on Azure Functions Linux is currently **Protobuf 5.29.x**.
+3. Protobuf's cross-version runtime guarantee enforces that the **runtime version cannot be older than the gencode version** used to compile `.proto` files (`Runtime >= Gencode`).
+
+### Why It Worked Before
+In previous deployments:
+- Google's PyPI packages (`firebase-admin`, `google-cloud-firestore`, `googleapis-common-protos`, `proto-plus`, `google-api-core`) were generated with Protobuf 5.x (`gencode 5.x`).
+- When Oryx built the application, all packages in `.python_packages` matched the host's Protobuf `5.29.x` runtime.
+- The `ValidateProtobufRuntimeVersion` check succeeded, the worker indexed the functions, and HTTP requests were routed normally.
+
+### Why It Failed Upon Today's Publish
+1. **Unpinned Dependencies in `requirements.txt`**:
+   The original `requirements.txt` had unpinned top-level packages (`firebase-admin`, `fastapi`, `pydantic`).
+2. **Fresh Remote Build on Oryx**:
+   When `func azure functionapp publish personalFinanceGX --python` was executed, Oryx wiped the existing `.python_packages` directory (`Deleting the old .python_packages directory`) and ran a clean `pip install -r requirements.txt`.
+3. **Upstream PyPI Release (Protobuf 6.x / 7.x)**:
+   Between previous deployments and today, Google released updated wheels on PyPI:
+   - `googleapis-common-protos` 1.75.2+ was recompiled with `protoc 6.33.5` (gencode `6.33.5`).
+   - `google-cloud-firestore` 2.30.0+ and `proto-plus` 1.28.4+ bumped their dependency to `protobuf>=6.33.5`.
+   - Pip automatically fetched these latest releases.
+4. **Runtime Collision on Worker Startup**:
+   When the Azure Functions worker booted up and imported `function_app.py` -> `Common/firebase_config.py` -> `DL/expense_dao.py` -> `google.type.latlng_pb2`:
+   - `latlng_pb2.py` checked the active Protobuf runtime in `sys.modules`.
+   - It detected runtime `5.29.6 < 6.33.5` and threw:
+     ```text
+     google.protobuf.runtime_version.VersionError: Detected incompatible Protobuf Gencode/Runtime versions when loading google/type/latlng.proto: gencode 6.33.5 runtime 5.29.6. Runtime version cannot be older than the linked gencode version.
+     ```
+5. **Why Deployment Said "Successful" but the API Returned 404**:
+   - The deployment pipeline only checks that pip succeeded and the zip was uploaded to Azure Blob Storage. Because pip installed valid packages without build syntax errors, Oryx reported **"The deployment was successful!"**.
+   - However, the crash occurred at **runtime during host startup**.
+   - The Azure Functions host logged `Worker failed to index functions` and reported **`0 functions loaded`**.
+   - With 0 functions indexed in the host, Kestrel had no route mapping for `/api/*` and returned **`HTTP 404 Not Found (Content-Length: 0)`** for every request.
+
+### The Resolution
+To ensure reliable, deterministic builds that remain compatible with the Azure Functions Python worker:
+1. **Pin Protobuf Stack in [`requirements.txt`](file:///c:/Users/gurua/Documents/Repositories/personal-finance-gx/requirements.txt)**:
+   ```text
+   # Pin protobuf stack to version 5.x to maintain compatibility with Azure Functions Python worker (5.29.x)
+   protobuf>=5.29.0,<6.0.0dev
+   googleapis-common-protos<1.75.0
+   proto-plus<1.26.0
+   grpcio-status<1.72.0
+   google-api-core<2.30.0
+   google-cloud-firestore<2.26.0
+   ```
+2. **Explicit Azure Functions V2 Routes in [`function_app.py`](file:///c:/Users/gurua/Documents/Repositories/personal-finance-gx/function_app.py)**:
+   Explicitly declare `@app.route(...)` handlers for all controllers so the Azure scale controller and host index every HTTP trigger individually.
+3. **Synchronized Route Prefix in [`host.json`](file:///c:/Users/gurua/Documents/Repositories/personal-finance-gx/host.json)**:
+   Ensure `"extensions": { "http": { "routePrefix": "api" } }` matches client URL configurations.
+
+
