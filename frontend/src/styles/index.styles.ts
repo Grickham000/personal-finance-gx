@@ -140,40 +140,82 @@ export const getStyles = (colors: Record<ThemeColor, string>) => StyleSheet.crea
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: Spacing.xs,
+  },
+  creditDebtHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    flex: 1,
   },
   creditDebtTitle: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '700',
   },
   creditDebtSubtitle: {
     fontSize: 11,
     marginTop: 2,
   },
+  creditDebtBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  creditDebtBadgeText: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  creditDebtAmountContainer: {
+    marginVertical: Spacing.xs,
+  },
+  creditDebtAmountLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 2,
+  },
   creditDebtTotalAmount: {
-    fontSize: 18,
+    fontSize: 26,
     fontWeight: '900',
+    letterSpacing: -0.5,
   },
   creditDebtDivider: {
     height: 1,
     marginVertical: Spacing.sm,
   },
-  creditDebtFooter: {
+  creditDebtBreakdownList: {
+    gap: Spacing.xs,
+  },
+  creditDebtBreakdownRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    paddingVertical: 2,
   },
-  creditDebtBreakdownItem: {
+  breakdownLabelContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 6,
+    flex: 1,
+    marginRight: Spacing.sm,
+  },
+  breakdownDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
   },
   breakdownLabel: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '500',
   },
   breakdownValue: {
-    fontSize: 11,
-    fontWeight: '600',
+    fontSize: 13,
+    fontWeight: '700',
+    textAlign: 'right',
   },
   actionSection: {
     marginBottom: Spacing.xl,

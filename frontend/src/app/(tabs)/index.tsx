@@ -20,7 +20,8 @@ import {
   ArrowUpRight, 
   ArrowDownRight,
   CreditCard,
-  AlertCircle
+  AlertCircle,
+  ChevronRight
 } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { getStyles } from '../../styles/index.styles';
@@ -148,35 +149,67 @@ export default function DashboardScreen() {
           onPress={() => router.push('/(tabs)/credit_cards')}
           activeOpacity={0.8}
         >
+          {/* Header Row */}
           <View style={styles.creditDebtHeader}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.xs }}>
+            <View style={styles.creditDebtHeaderLeft}>
               <View style={[styles.statIconContainer, { backgroundColor: 'rgba(234, 88, 12, 0.12)', marginBottom: 0 }]}>
                 <CreditCard size={18} color="#EA580C" />
               </View>
-              <View>
+              <View style={{ flex: 1 }}>
                 <Text style={[styles.creditDebtTitle, { color: colors.text }]}>Total Spent (incl. CC Debt)</Text>
                 <Text style={[styles.creditDebtSubtitle, { color: colors.textSecondary }]}>
-                  Adding unpaid credit card debt
+                  Committed outflows + unpaid credit debt
                 </Text>
               </View>
             </View>
-            <Text style={[styles.creditDebtTotalAmount, { color: colors.danger }]}>
+            <View style={[styles.creditDebtBadge, { backgroundColor: isDark ? 'rgba(234, 88, 12, 0.18)' : 'rgba(234, 88, 12, 0.1)' }]}>
+              <Text style={[styles.creditDebtBadgeText, { color: '#EA580C' }]}>Cards</Text>
+              <ChevronRight size={13} color="#EA580C" />
+            </View>
+          </View>
+
+          {/* Vertical Main Amount Display (Full width, avoids crowding) */}
+          <View style={styles.creditDebtAmountContainer}>
+            <Text style={[styles.creditDebtAmountLabel, { color: colors.textMuted }]}>
+              Total Committed Outflows
+            </Text>
+            <Text 
+              style={[styles.creditDebtTotalAmount, { color: colors.danger }]}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+            >
               {formatCurrency(totalSpentWithCredit, profile?.currency)}
             </Text>
           </View>
 
           <View style={[styles.creditDebtDivider, { backgroundColor: colors.border }]} />
 
-          <View style={styles.creditDebtFooter}>
-            <View style={styles.creditDebtBreakdownItem}>
-              <Text style={[styles.breakdownLabel, { color: colors.textMuted }]}>Realized Outflows:</Text>
-              <Text style={[styles.breakdownValue, { color: colors.textSecondary }]}>
+          {/* Vertical Breakdown Rows: Each item gets its own full-width line */}
+          <View style={styles.creditDebtBreakdownList}>
+            <View style={styles.creditDebtBreakdownRow}>
+              <View style={styles.breakdownLabelContainer}>
+                <View style={[styles.breakdownDot, { backgroundColor: colors.textMuted }]} />
+                <Text style={[styles.breakdownLabel, { color: colors.textSecondary }]}>Realized Outflows (Paid):</Text>
+              </View>
+              <Text 
+                style={[styles.breakdownValue, { color: colors.text }]}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+              >
                 {formatCurrency(balance.total_expenses, profile?.currency)}
               </Text>
             </View>
-            <View style={styles.creditDebtBreakdownItem}>
-              <Text style={[styles.breakdownLabel, { color: '#EA580C' }]}>Unpaid CC Debt:</Text>
-              <Text style={[styles.breakdownValue, { color: '#EA580C', fontWeight: '700' }]}>
+
+            <View style={styles.creditDebtBreakdownRow}>
+              <View style={styles.breakdownLabelContainer}>
+                <View style={[styles.breakdownDot, { backgroundColor: '#EA580C' }]} />
+                <Text style={[styles.breakdownLabel, { color: '#EA580C', fontWeight: '600' }]}>Unpaid CC Debt:</Text>
+              </View>
+              <Text 
+                style={[styles.breakdownValue, { color: '#EA580C' }]}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+              >
                 +{formatCurrency(unpaidCreditDebt, profile?.currency)}
               </Text>
             </View>
