@@ -231,16 +231,25 @@ class MoneyBalanceService:
         # Total committed spent: Realized out-of-pocket + All unpaid credit card debt
         total_spent_with_credit = total_realized_outflows + unpaid_credit_card_debt
 
+        # Net cash flow = Monthly income minus realized outflows
+        net_cash_flow = monthly_income - total_realized_outflows
+        # Forecasted flow = Monthly income minus (realized outflows + credit debt due this month only)
+        forecasted_flow = monthly_income - (total_realized_outflows + total_credit_expenses_due)
+
         return {
             "monthly_income": monthly_income,
             "total_income": monthly_income,
-            "total_immediate_expenses": total_immediate_expenses,
-            "total_credit_expenses_due": total_credit_expenses_due,
-            "total_fixed_expenses": total_fixed_expenses,
-            "total_credit_payments_made": total_credit_payments_made,
+            "total_immediate_expenses": round(total_immediate_expenses, 2),
+            "total_credit_expenses_due": round(total_credit_expenses_due, 2),
+            "credit_debt_due_this_month": round(total_credit_expenses_due, 2),
+            "total_fixed_expenses": round(total_fixed_expenses, 2),
+            "total_credit_payments_made": round(total_credit_payments_made, 2),
+            "total_realized_outflows": round(total_realized_outflows, 2),
             "total_expenses": total_expenses,
             "remaining_balance": remaining_balance,
-            "cash_flow": remaining_balance,
+            "cash_flow": round(net_cash_flow, 2),
+            "net_cash_flow": round(net_cash_flow, 2),
+            "forecasted_flow": round(forecasted_flow, 2),
             "target_month": target_month_str,
             "unpaid_credit_card_debt": round(unpaid_credit_card_debt, 2),
             "total_spent_with_credit": round(total_spent_with_credit, 2),

@@ -8,6 +8,10 @@ export const useDashboard = () => {
   const [recentExpenses, setRecentExpenses] = useState<any[]>([]);
   const [unpaidCreditDebt, setUnpaidCreditDebt] = useState<number>(0);
   const [totalSpentWithCredit, setTotalSpentWithCredit] = useState<number>(0);
+  const [netCashFlow, setNetCashFlow] = useState<number>(0);
+  const [forecastedFlow, setForecastedFlow] = useState<number>(0);
+  const [creditDebtDueThisMonth, setCreditDebtDueThisMonth] = useState<number>(0);
+  const [realizedOutflows, setRealizedOutflows] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [profileMissing, setProfileMissing] = useState(false);
@@ -103,14 +107,101 @@ export const useDashboard = () => {
         });
       }
 
+      // Calculate credit card debt that has to be paid in current month only (client fallback)
+      const now = new Date();
+      const currentYear = now.getFullYear();
+      const currentMonth = now.getMonth() + 1;
+
+      const paidCycles = new Set<string>();
+      (paymentsData || []).forEach((pay: any) => {
+        if (pay.statement_month) {
+          if (pay.payment_method_id) {
+            paidCycles.add(`${pay.payment_method_id}#${pay.statement_month}`);
+            paidCycles.add(`${pay.payment_method_id.toLowerCase()}#${pay.statement_month}`);
+          }
+        }
+      });
+
+      let calculatedDebtDueThisMonth = 0;
+      (expensesData || []).forEach((exp: any) => {
+        const expAmount = Number(exp.expense) || 0;
+        const expDate = new Date(exp.expense_date);
+        
+        const pm = (profileData?.payment_methods || []).find((p: any) => 
+          (exp.payment_method_id && p.id === exp.payment_method_id) ||
+          (p.name && p.name.toLowerCase() === (exp.payment_method || '').toLowerCase())
+        );
+
+        if (!pm || pm.is_immediate) {
+          return;
+        }
+
+        const cutDateDay = pm.cut_date || 1;
+        const daysToPay = pm.days_to_pay || 0;
+
+        let cutoffYear = expDate.getFullYear();
+        let cutoffMonth = expDate.getMonth() + 1;
+        if (expDate.getDate() > cutDateDay) {
+          if (cutoffMonth === 12) {
+            cutoffYear += 1;
+            cutoffMonth = 1;
+          } else {
+            cutoffMonth += 1;
+          }
+        }
+
+        const lastDayOfCutoff = new Date(cutoffYear, cutoffMonth, 0).getDate();
+        const cutoffDay = Math.min(cutDateDay, lastDayOfCutoff);
+        const cutoffDate = new Date(cutoffYear, cutoffMonth - 1, cutoffDay);
+        
+        const paymentDueDate = new Date(cutoffDate.getTime() + daysToPay * 24 * 60 * 60 * 1000);
+
+        if (paymentDueDate.getFullYear() === currentYear && (paymentDueDate.getMonth() + 1) === currentMonth) {
+          const stmtMonth = `${cutoffYear}-${String(cutoffMonth).padStart(2, '0')}`;
+          const isPaid = (pm.id && paidCycles.has(`${pm.id}#${stmtMonth}`)) ||
+                         paidCycles.has(`${(pm.name || '').toLowerCase()}#${stmtMonth}`);
+          if (!isPaid) {
+            calculatedDebtDueThisMonth += expAmount;
+          }
+        }
+      });
+
+      const finalCreditDebtDueThisMonth = balanceData?.credit_debt_due_this_month !== undefined 
+        ? Number(balanceData.credit_debt_due_this_month)
+        : (balanceData?.total_credit_expenses_due !== undefined 
+            ? Number(balanceData.total_credit_expenses_due)
+            : calculatedDebtDueThisMonth);
+
+      const finalRealizedOutflows = balanceData?.total_realized_outflows !== undefined
+        ? Number(balanceData.total_realized_outflows)
+        : (balanceData?.total_expenses !== undefined
+            ? Math.max(0, Number(balanceData.total_expenses) - (Number(balanceData?.total_credit_expenses_due) || 0))
+            : 0);
+
+      const monthlyIncome = Number(profileData?.monthly_income) || Number(balanceData?.monthly_income) || Number(balanceData?.total_income) || 0;
+
+      const finalNetCashFlow = balanceData?.net_cash_flow !== undefined
+        ? Number(balanceData.net_cash_flow)
+        : (balanceData?.cash_flow !== undefined && balanceData?.forecasted_flow !== undefined
+            ? Number(balanceData.cash_flow)
+            : monthlyIncome - finalRealizedOutflows);
+
+      const finalForecastedFlow = balanceData?.forecasted_flow !== undefined
+        ? Number(balanceData.forecasted_flow)
+        : (finalNetCashFlow - finalCreditDebtDueThisMonth);
+
       const finalUnpaidCcDebt = balanceData?.unpaid_credit_card_debt !== undefined 
-        ? balanceData.unpaid_credit_card_debt 
+        ? Number(balanceData.unpaid_credit_card_debt) 
         : calculatedUnpaidCcDebt;
 
       const finalTotalSpentWithCredit = balanceData?.total_spent_with_credit !== undefined
-        ? balanceData.total_spent_with_credit
-        : (balanceData?.total_expenses || 0) + finalUnpaidCcDebt;
+        ? Number(balanceData.total_spent_with_credit)
+        : (finalRealizedOutflows + finalUnpaidCcDebt);
 
+      setCreditDebtDueThisMonth(finalCreditDebtDueThisMonth);
+      setRealizedOutflows(finalRealizedOutflows);
+      setNetCashFlow(finalNetCashFlow);
+      setForecastedFlow(finalForecastedFlow);
       setUnpaidCreditDebt(finalUnpaidCcDebt);
       setTotalSpentWithCredit(finalTotalSpentWithCredit);
 
@@ -147,6 +238,10 @@ export const useDashboard = () => {
   return {
     profile,
     balance,
+    netCashFlow,
+    forecastedFlow,
+    creditDebtDueThisMonth,
+    realizedOutflows,
     unpaidCreditDebt,
     totalSpentWithCredit,
     recentExpenses,

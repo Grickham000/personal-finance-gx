@@ -21,7 +21,8 @@ import {
   ArrowDownRight,
   CreditCard,
   AlertCircle,
-  ChevronRight
+  ChevronRight,
+  Sparkles
 } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { getStyles } from '../../styles/index.styles';
@@ -37,6 +38,10 @@ export default function DashboardScreen() {
   const {
     profile,
     balance,
+    netCashFlow,
+    forecastedFlow,
+    creditDebtDueThisMonth,
+    realizedOutflows,
     unpaidCreditDebt,
     totalSpentWithCredit,
     recentExpenses,
@@ -106,11 +111,48 @@ export default function DashboardScreen() {
         >
           <View style={styles.mainCardHeader}>
             <Text style={styles.mainCardLabel}>Net Cash Flow (This Month)</Text>
-            <TrendingUp size={22} color="#10B981" />
+            {netCashFlow >= 0 ? (
+              <TrendingUp size={22} color="#10B981" />
+            ) : (
+              <TrendingDown size={22} color="#F43F5E" />
+            )}
           </View>
-          <Text style={styles.mainCardBalance}>
-            {formatCurrency(balance.cash_flow, profile?.currency)}
+          <Text 
+            style={styles.mainCardBalance}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+          >
+            {formatCurrency(netCashFlow, profile?.currency)}
           </Text>
+
+          {/* Forecasted Flow (Just below Net Cash Flow) */}
+          <View style={styles.forecastedContainer}>
+            <View style={styles.forecastedRow}>
+              <View style={styles.forecastedLabelRow}>
+                <View style={[styles.forecastedIconBadge, { backgroundColor: isDark ? 'rgba(167, 139, 250, 0.25)' : 'rgba(255, 255, 255, 0.2)' }]}>
+                  <Sparkles size={13} color={isDark ? '#C4B5FD' : '#FFF'} />
+                </View>
+                <Text style={styles.forecastedLabel}>Forecasted Flow</Text>
+              </View>
+              <Text 
+                style={[
+                  styles.forecastedAmount,
+                  { color: forecastedFlow >= 0 ? '#6EE7B7' : '#FDA4AF' }
+                ]}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+              >
+                {formatCurrency(forecastedFlow, profile?.currency)}
+              </Text>
+            </View>
+
+            <Text style={styles.forecastedSubtext}>
+              {creditDebtDueThisMonth > 0 
+                ? `Includes -${formatCurrency(creditDebtDueThisMonth, profile?.currency)} CC debt due this month` 
+                : 'Income − (Outcome + Debt due this month)'}
+            </Text>
+          </View>
+
           <View style={styles.mainCardFooter}>
             <Text style={styles.mainCardFootnote}>
               Monthly Income: {formatCurrency(profile?.monthly_income || 0, profile?.currency)}
@@ -126,7 +168,11 @@ export default function DashboardScreen() {
               <TrendingUp size={18} color={colors.success} />
             </View>
             <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Total Inflows</Text>
-            <Text style={[styles.statAmount, { color: colors.success }]}>
+            <Text 
+              style={[styles.statAmount, { color: colors.success }]}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+            >
               {formatCurrency(balance.total_income, profile?.currency)}
             </Text>
           </View>
@@ -137,8 +183,12 @@ export default function DashboardScreen() {
               <TrendingDown size={18} color={colors.danger} />
             </View>
             <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Total Outflows</Text>
-            <Text style={[styles.statAmount, { color: colors.danger }]}>
-              {formatCurrency(balance.total_expenses, profile?.currency)}
+            <Text 
+              style={[styles.statAmount, { color: colors.danger }]}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+            >
+              {formatCurrency(realizedOutflows, profile?.currency)}
             </Text>
           </View>
         </View>
@@ -196,7 +246,7 @@ export default function DashboardScreen() {
                 numberOfLines={1}
                 adjustsFontSizeToFit
               >
-                {formatCurrency(balance.total_expenses, profile?.currency)}
+                {formatCurrency(realizedOutflows, profile?.currency)}
               </Text>
             </View>
 

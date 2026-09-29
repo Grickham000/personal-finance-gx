@@ -81,7 +81,12 @@ def test_get_monthly_balance_calculations(mock_daos):
     assert result["monthly_income"] == 5000.0
     assert result["total_immediate_expenses"] == 100.0
     assert result["total_credit_expenses_due"] == 250.0
+    assert result["credit_debt_due_this_month"] == 250.0
     assert result["total_fixed_expenses"] == 1000.0
+    assert result["total_realized_outflows"] == 1100.0
+    assert result["net_cash_flow"] == 3900.0
+    assert result["cash_flow"] == 3900.0
+    assert result["forecasted_flow"] == 3650.0
     assert result["total_expenses"] == 1350.0
     assert result["remaining_balance"] == 3650.0
 
@@ -141,7 +146,12 @@ def test_get_monthly_balance_with_settled_credit_card(mock_daos):
     # remaining_balance = 4750.0
     
     assert result["total_credit_expenses_due"] == 0.0
+    assert result["credit_debt_due_this_month"] == 0.0
     assert result["total_credit_payments_made"] == 250.0
+    assert result["total_realized_outflows"] == 250.0
+    assert result["net_cash_flow"] == 4750.0
+    assert result["cash_flow"] == 4750.0
+    assert result["forecasted_flow"] == 4750.0
     assert result["total_expenses"] == 250.0
     assert result["remaining_balance"] == 4750.0
 
