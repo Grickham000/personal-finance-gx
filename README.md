@@ -190,14 +190,50 @@ EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID=your_measurement_id
   2. **Firebase Security Rules**: All database and storage operations must enforce strict authentication rules. Never rely on API key secrecy for authorization.
   3. **Backend Isolation**: Real secrets (Azure Function master keys, Cosmos DB credentials, Firebase Admin SDK service account JSON) reside **only** in the backend Azure Function App (`personalFinanceGX`) and are never exposed to the frontend.
 
-### Building the Mobile App (Android APK)
+### Building the Mobile App (Android APK via EAS Build)
 
-To build a standalone installable `.apk` for Android using EAS Build (no Android Studio required):
-```bash
-cd frontend
-npx eas-cli build --platform android --profile preview
-```
-Once the cloud build finishes, scan the QR code or click the download link to install the `.apk` on your Android device.
+You can compile standalone installable `.apk` packages in the cloud using **EAS Build** (no local Android SDK or Android Studio required).
+
+#### Fast Trigger Commands (Non-Blocking)
+Run directly inside the `frontend/` directory:
+
+- **Production APK Build** (Recommended for release):
+  ```bash
+  cd frontend
+  npm run build:production
+  # Or directly via npx:
+  npx eas-cli build --platform android --profile production --non-interactive --no-wait
+  ```
+
+- **Preview APK Build** (For internal testing):
+  ```bash
+  cd frontend
+  npm run build:preview
+  # Or directly via npx:
+  npx eas-cli build --platform android --profile preview --non-interactive --no-wait
+  ```
+
+> [!TIP]
+> **Why `--non-interactive --no-wait`?**
+> - `--non-interactive`: Bypasses all CLI prompts, using saved remote credentials and configurations automatically.
+> - `--no-wait`: Uploads the project and returns the **live cloud build URL** immediately instead of tying up your terminal for 5–10 minutes while Expo's cloud servers compile the APK.
+> - **Skip fingerprint delay**: You can prepend `EAS_SKIP_AUTO_FINGERPRINT=1` to skip local dependency fingerprint hashing and speed up upload times:
+>   ```bash
+>   EAS_SKIP_AUTO_FINGERPRINT=1 npx eas-cli build --platform android --profile production --non-interactive --no-wait
+>   ```
+
+#### Checking Build Status & Getting the Download Link
+- View the latest build status:
+  ```bash
+  npm run build:status
+  # Or:
+  npx eas-cli build:list --limit 1
+  ```
+- View details of a specific build:
+  ```bash
+  npx eas-cli build:view <BUILD_ID>
+  ```
+- Track progress live in the web browser at [expo.dev/accounts/grickham/projects/personal-finance/builds](https://expo.dev/accounts/grickham/projects/personal-finance/builds). Once finished, scan the QR code or click the download link to install the `.apk` on your device.
 
 ---
 
