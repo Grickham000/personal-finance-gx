@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useFocusEffect } from 'expo-router';
 import { apiService } from '../services/api';
 import { logoutUser } from '../services/auth';
 
@@ -21,7 +22,7 @@ export const useDashboard = () => {
       setProfileMissing(false);
       
       // Parallel fetch of all required dashboard datasets
-      const [profileData, balanceData, expensesData, paymentsData] = await Promise.all([
+      const [profileData, balanceData, expensesData, paymentsData, fixedExpensesData] = await Promise.all([
         apiService.getUserProfile().catch((err: any) => {
           if (err.response?.status === 404 || (err.response?.data && typeof err.response.data === 'string' && err.response.data.includes('not found'))) {
             setProfileMissing(true);
@@ -40,6 +41,10 @@ export const useDashboard = () => {
         }),
         apiService.getCreditCardPayments().catch((err) => {
           console.error('Error fetching cc payments:', err);
+          return [];
+        }),
+        apiService.getFixedExpenses().catch((err) => {
+          console.error('Error fetching fixed expenses:', err);
           return [];
         })
       ]);
@@ -91,7 +96,23 @@ export const useDashboard = () => {
               return isCardMatch && expDate >= startDate && expDate <= endDate;
             });
 
-            const totalSpent = statementExpenses.reduce((sum: number, exp: any) => sum + (Number(exp.expense) || 0), 0);
+            const isCycleStarted = startDate <= today;
+            const statementFixedSpent = isCycleStarted
+              ? (fixedExpensesData || [])
+                  .filter((fe: any) => {
+                    const isCardMatch =
+                      (fe.payment_method_id && cardId && fe.payment_method_id === cardId) ||
+                      (fe.payment_method && fe.payment_method.toLowerCase() === cardNameLower);
+                    if (!isCardMatch) return false;
+                    const feStart = new Date(fe.fexpense_start_date);
+                    const feEnd = fe.expire && fe.fexpense_end_date ? new Date(fe.fexpense_end_date) : null;
+                    if (isNaN(feStart.getTime())) return false;
+                    return feStart <= endDate && (!fe.expire || !feEnd || feEnd >= startDate);
+                  })
+                  .reduce((sum: number, fe: any) => sum + (Number(fe.fixed_expense) || 0), 0)
+              : 0;
+
+            const totalSpent = statementExpenses.reduce((sum: number, exp: any) => sum + (Number(exp.expense) || 0), 0) + statementFixedSpent;
 
             const statementPayments = (paymentsData || []).filter((pay: any) => {
               const isCardMatch = 
@@ -166,11 +187,61 @@ export const useDashboard = () => {
         }
       });
 
-      const finalCreditDebtDueThisMonth = balanceData?.credit_debt_due_this_month !== undefined 
+      (fixedExpensesData || []).forEach((fe: any) => {
+        const feAmount = Number(fe.fixed_expense) || 0;
+        const pm = (profileData?.payment_methods || []).find((p: any) =>
+          (fe.payment_method_id && p.id === fe.payment_method_id) ||
+          (p.name && p.name.toLowerCase() === (fe.payment_method || '').toLowerCase())
+        );
+
+        if (!pm || pm.is_immediate) {
+          return;
+        }
+
+        const cutDateDay = pm.cut_date || 1;
+        const daysToPay = pm.days_to_pay || 0;
+        const feStart = new Date(fe.fexpense_start_date);
+        const feEnd = fe.expire && fe.fexpense_end_date ? new Date(fe.fexpense_end_date) : null;
+        if (isNaN(feStart.getTime())) return;
+
+        for (let offset = -2; offset <= 1; offset++) {
+          const targetCycleDate = new Date(currentYear, currentMonth - 1 + offset, 1);
+          const cYear = targetCycleDate.getFullYear();
+          const cMonth = targetCycleDate.getMonth() + 1;
+
+          const lastDayOfCutoff = new Date(cYear, cMonth, 0).getDate();
+          const cutoffDay = Math.min(cutDateDay, lastDayOfCutoff);
+          const cutoffDate = new Date(cYear, cMonth - 1, cutoffDay);
+          const cycleEndDate = new Date(cYear, cMonth - 1, cutoffDay, 23, 59, 59, 999);
+
+          const prevMonthDate = new Date(cYear, cMonth - 2, 1);
+          const pYear = prevMonthDate.getFullYear();
+          const pMonth = prevMonthDate.getMonth() + 1;
+          const lastDayOfPrev = new Date(pYear, pMonth, 0).getDate();
+          const prevCutoffDay = Math.min(cutDateDay, lastDayOfPrev);
+          const cycleStartDate = new Date(pYear, pMonth - 1, prevCutoffDay + 1, 0, 0, 0, 0);
+
+          const paymentDueDate = new Date(cutoffDate.getTime() + daysToPay * 24 * 60 * 60 * 1000);
+          if (paymentDueDate.getFullYear() === currentYear && (paymentDueDate.getMonth() + 1) === currentMonth) {
+            const isActive = feStart <= cycleEndDate && (!fe.expire || !feEnd || feEnd >= cycleStartDate);
+            if (isActive) {
+              const stmtMonth = `${cYear}-${String(cMonth).padStart(2, '0')}`;
+              const isPaid = (pm.id && paidCycles.has(`${pm.id}#${stmtMonth}`)) ||
+                             paidCycles.has(`${(pm.name || '').toLowerCase()}#${stmtMonth}`);
+              if (!isPaid) {
+                calculatedDebtDueThisMonth += feAmount;
+              }
+            }
+          }
+        }
+      });
+
+      const backendDebtDue = balanceData?.credit_debt_due_this_month !== undefined
         ? Number(balanceData.credit_debt_due_this_month)
-        : (balanceData?.total_credit_expenses_due !== undefined 
+        : (balanceData?.total_credit_expenses_due !== undefined
             ? Number(balanceData.total_credit_expenses_due)
-            : calculatedDebtDueThisMonth);
+            : 0);
+      const finalCreditDebtDueThisMonth = Math.max(backendDebtDue, calculatedDebtDueThisMonth);
 
       const finalRealizedOutflows = balanceData?.total_realized_outflows !== undefined
         ? Number(balanceData.total_realized_outflows)
@@ -186,17 +257,14 @@ export const useDashboard = () => {
             ? Number(balanceData.cash_flow)
             : monthlyIncome - finalRealizedOutflows);
 
-      const finalForecastedFlow = balanceData?.forecasted_flow !== undefined
-        ? Number(balanceData.forecasted_flow)
-        : (finalNetCashFlow - finalCreditDebtDueThisMonth);
+      const finalForecastedFlow = finalNetCashFlow - finalCreditDebtDueThisMonth;
 
-      const finalUnpaidCcDebt = balanceData?.unpaid_credit_card_debt !== undefined 
-        ? Number(balanceData.unpaid_credit_card_debt) 
-        : calculatedUnpaidCcDebt;
+      const backendUnpaidCcDebt = balanceData?.unpaid_credit_card_debt !== undefined
+        ? Number(balanceData.unpaid_credit_card_debt)
+        : 0;
+      const finalUnpaidCcDebt = Math.max(backendUnpaidCcDebt, calculatedUnpaidCcDebt);
 
-      const finalTotalSpentWithCredit = balanceData?.total_spent_with_credit !== undefined
-        ? Number(balanceData.total_spent_with_credit)
-        : (finalRealizedOutflows + finalUnpaidCcDebt);
+      const finalTotalSpentWithCredit = finalRealizedOutflows + finalUnpaidCcDebt;
 
       setCreditDebtDueThisMonth(finalCreditDebtDueThisMonth);
       setRealizedOutflows(finalRealizedOutflows);
@@ -213,9 +281,11 @@ export const useDashboard = () => {
     }
   }, []);
 
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+  useFocusEffect(
+    useCallback(() => {
+      fetchData();
+    }, [fetchData])
+  );
 
   const onRefresh = () => {
     setRefreshing(true);

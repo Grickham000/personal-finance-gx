@@ -1,6 +1,9 @@
 import axios from 'axios';
 import { auth } from './auth';
 import { CONFIG } from '../constants/config';
+import { LocalStore } from './secureStore';
+
+const FIXED_EXPENSE_CARDS_KEY = '@pf_fixed_expense_cards';
 
 // Create Axios instance pointing to Azure Functions
 const apiClient = axios.create({
@@ -19,7 +22,12 @@ apiClient.interceptors.request.use(
       return config;
     }
 
-    const currentUser = auth.currentUser;
+    let currentUser = auth.currentUser;
+    if (!currentUser) {
+      const { tryRestoreSession } = await import('./auth');
+      currentUser = await tryRestoreSession();
+    }
+
     if (currentUser) {
       try {
         // Fetch JWT ID token from Firebase auth (force refresh if close to expiry)
@@ -36,13 +44,28 @@ apiClient.interceptors.request.use(
   }
 );
 
-// Response error handler (e.g., auto-logout on 401)
+// Response error handler: refresh token and retry once on 401 without logging the user out
 apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
-    if (error.response?.status === 401) {
-      console.warn('Unauthorized request! Signing out...');
-      await auth.signOut();
+    const originalRequest = error.config;
+    if (error.response?.status === 401 && originalRequest && !originalRequest._retry) {
+      originalRequest._retry = true;
+      try {
+        let currentUser = auth.currentUser;
+        if (!currentUser) {
+          const { tryRestoreSession } = await import('./auth');
+          currentUser = await tryRestoreSession();
+        }
+        if (currentUser) {
+          const freshToken = await currentUser.getIdToken(true);
+          originalRequest.headers = originalRequest.headers || {};
+          originalRequest.headers.Authorization = `Bearer ${freshToken}`;
+          return apiClient(originalRequest);
+        }
+      } catch (refreshErr) {
+        console.warn('Token refresh retry failed:', refreshErr);
+      }
     }
     return Promise.reject(error);
   }
@@ -149,8 +172,24 @@ export const apiService = {
 
   // --- Fixed Expenses Management ---
   getFixedExpenses: async (filters?: { fexpense_type?: string; expire?: boolean }) => {
-    const response = await apiClient.get('/fixed_expenses', { params: filters });
-    return response.data;
+    const [response, localCardMap] = await Promise.all([
+      apiClient.get('/fixed_expenses', { params: filters }),
+      LocalStore.get<Record<string, { payment_method: string | null; payment_method_id: string | null }>>(FIXED_EXPENSE_CARDS_KEY)
+    ]);
+    const list = Array.isArray(response.data) ? response.data : [];
+    const cardMap = localCardMap || {};
+    return list.map((item: any) => {
+      const localEntry = item?.id ? cardMap[item.id] : undefined;
+      return {
+        ...item,
+        payment_method: item.payment_method !== undefined && item.payment_method !== null
+          ? item.payment_method
+          : (localEntry?.payment_method ?? null),
+        payment_method_id: item.payment_method_id !== undefined && item.payment_method_id !== null
+          ? item.payment_method_id
+          : (localEntry?.payment_method_id ?? null),
+      };
+    });
   },
 
   createFixedExpense: async (fixedExpenseData: {
@@ -160,18 +199,82 @@ export const apiService = {
     fexpense_end_date: string | null;
     fexpense_description: string;
     expire: boolean;
+    payment_method?: string | null;
+    payment_method_id?: string | null;
   }) => {
-    const response = await apiClient.post('/fixed_expenses', fixedExpenseData);
-    return response.data;
+    let responseData: any;
+    try {
+      const response = await apiClient.post('/fixed_expenses', fixedExpenseData);
+      responseData = response.data;
+    } catch (err: any) {
+      const errMsg = typeof err?.response?.data === 'string' ? err.response.data : '';
+      if (err?.response?.status === 400 && errMsg.includes('unexpected keyword argument')) {
+        const { payment_method, payment_method_id, ...legacyPayload } = fixedExpenseData;
+        const retryRes = await apiClient.post('/fixed_expenses', legacyPayload);
+        responseData = retryRes.data;
+      } else {
+        throw err;
+      }
+    }
+
+    const createdId =
+      typeof responseData === 'string' && responseData.includes('ID: ')
+        ? responseData.split('ID: ')[1].trim()
+        : responseData?.id;
+
+    if (createdId) {
+      const cardMap = (await LocalStore.get<Record<string, any>>(FIXED_EXPENSE_CARDS_KEY)) || {};
+      if (fixedExpenseData.payment_method || fixedExpenseData.payment_method_id) {
+        cardMap[createdId] = {
+          payment_method: fixedExpenseData.payment_method || null,
+          payment_method_id: fixedExpenseData.payment_method_id || null,
+        };
+      } else {
+        delete cardMap[createdId];
+      }
+      await LocalStore.set(FIXED_EXPENSE_CARDS_KEY, cardMap);
+    }
+
+    return responseData;
   },
 
   updateFixedExpense: async (id: string, fixedExpenseData: any) => {
-    const response = await apiClient.put(`/fixed_expenses/${id}`, fixedExpenseData);
-    return response.data;
+    let responseData: any;
+    try {
+      const response = await apiClient.put(`/fixed_expenses/${id}`, fixedExpenseData);
+      responseData = response.data;
+    } catch (err: any) {
+      const errMsg = typeof err?.response?.data === 'string' ? err.response.data : '';
+      if (err?.response?.status === 400 && errMsg.includes('unexpected keyword argument')) {
+        const { payment_method, payment_method_id, ...legacyPayload } = fixedExpenseData;
+        const retryRes = await apiClient.put(`/fixed_expenses/${id}`, legacyPayload);
+        responseData = retryRes.data;
+      } else {
+        throw err;
+      }
+    }
+
+    const cardMap = (await LocalStore.get<Record<string, any>>(FIXED_EXPENSE_CARDS_KEY)) || {};
+    if (fixedExpenseData.payment_method || fixedExpenseData.payment_method_id) {
+      cardMap[id] = {
+        payment_method: fixedExpenseData.payment_method || null,
+        payment_method_id: fixedExpenseData.payment_method_id || null,
+      };
+    } else {
+      delete cardMap[id];
+    }
+    await LocalStore.set(FIXED_EXPENSE_CARDS_KEY, cardMap);
+
+    return responseData;
   },
 
   deleteFixedExpense: async (id: string) => {
     const response = await apiClient.delete(`/fixed_expenses/${id}`);
+    const cardMap = (await LocalStore.get<Record<string, any>>(FIXED_EXPENSE_CARDS_KEY)) || {};
+    if (cardMap[id]) {
+      delete cardMap[id];
+      await LocalStore.set(FIXED_EXPENSE_CARDS_KEY, cardMap);
+    }
     return response.data;
   },
 

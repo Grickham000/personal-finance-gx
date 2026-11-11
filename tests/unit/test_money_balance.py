@@ -177,3 +177,57 @@ def test_get_money_balance_endpoint(mock_service, mock_verify_token):
     body = json.loads(response.get_body().decode())
     assert body["remaining_balance"] == 3650.0
     mock_service.get_monthly_balance.assert_called_once_with("user_123", "2026-06")
+
+def test_get_monthly_balance_with_credit_card_fixed_expense(mock_daos):
+    profile_dao, expense_dao, fixed_dao, payment_dao = mock_daos
+    payment_dao.get_payments.return_value = []
+
+    profile_dao.get_profile.return_value = UserProfileEntity(
+        user_id="user_123",
+        user_name="John Doe",
+        expense_types=["subscriptions", "housing"],
+        payment_methods=[
+            {"id": "debit_id", "name": "debit", "is_immediate": True, "cut_date": 0, "days_to_pay": 0},
+            {"id": "cc1_id", "name": "credit_card1", "is_immediate": False, "cut_date": 16, "days_to_pay": 20}
+        ],
+        monthly_income=5000.0,
+        id="profile_123"
+    )
+
+    expense_dao.get_expenses.return_value = []
+
+    # 1 regular fixed expense ($1000) and 1 credit-card-linked fixed expense ($50 starting 2026-05-01)
+    fixed_dao.get_fixed_expenses.return_value = [
+        FixedExpenseEntity(
+            user_id="user_123",
+            fixed_expense=1000.0,
+            fexpense_type="housing",
+            fexpense_description="rent",
+            fexpense_start_date="2026-01-01T00:00:00Z",
+            fexpense_end_date="2026-12-31T00:00:00Z",
+            expire=True
+        ),
+        FixedExpenseEntity(
+            user_id="user_123",
+            fixed_expense=50.0,
+            fexpense_type="subscriptions",
+            fexpense_description="Netflix",
+            fexpense_start_date="2026-05-01T00:00:00Z",
+            fexpense_end_date=None,
+            expire=False,
+            payment_method="credit_card1",
+            payment_method_id="cc1_id"
+        )
+    ]
+
+    service = MoneyBalanceService()
+    result = service.get_monthly_balance("user_123", "2026-06")
+
+    # Regular fixed expense is in total_fixed_expenses ($1000)
+    # CC-linked fixed expense ($50) from May cycle (cutoff May 16, due June 5) is in total_credit_expenses_due ($50)
+    assert result["total_fixed_expenses"] == 1000.0
+    assert result["total_credit_expenses_due"] == 50.0
+    assert result["credit_debt_due_this_month"] == 50.0
+    assert result["total_realized_outflows"] == 1000.0
+    assert result["net_cash_flow"] == 4000.0
+    assert result["forecasted_flow"] == 3950.0

@@ -40,6 +40,8 @@ class FixedExpenseCreateSchema(BaseModel):
     fexpense_end_date: Optional[str] = Field(None, description="End date of the fixed expense", example="2023-12-31T00:00:00Z")
     fexpense_description: str = Field(..., description="Description", example="Rent")
     expire: bool = Field(..., description="Whether this fixed expense has expired", example=False)
+    payment_method: Optional[str] = Field(None, description="Optional credit card / payment method name", example="credit card1")
+    payment_method_id: Optional[str] = Field(None, description="Optional credit card / payment method ID", example="pm_123")
 
 class PaymentMethodSchema(BaseModel):
     id: Optional[str] = Field(None, description="Optional stable payment method ID", example="debit_123")

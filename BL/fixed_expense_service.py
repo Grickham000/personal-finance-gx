@@ -12,7 +12,23 @@ class FixedExpenseService:
         decoded_token = auth.verify_id_token(token)
         return decoded_token['uid']
 
+    def _resolve_payment_method_id(self, fixed_expense_dto: FixedExpenseDTO):
+        if not fixed_expense_dto.payment_method_id and fixed_expense_dto.payment_method:
+            try:
+                from DL.user_profile_dao import UserProfileDAO
+                profile = UserProfileDAO().get_profile(fixed_expense_dto.user_id)
+                if profile:
+                    pm_name_lower = fixed_expense_dto.payment_method.lower()
+                    for pm in (profile.payment_methods or []):
+                        if pm.get('name', '').lower() == pm_name_lower:
+                            fixed_expense_dto.payment_method_id = pm.get('id')
+                            break
+            except Exception as e:
+                import logging
+                logging.warning(f"Could not resolve payment_method_id for fixed expense: {e}")
+
     def create_fixed_expense(self, fixed_expense_dto: FixedExpenseDTO) -> str:
+        self._resolve_payment_method_id(fixed_expense_dto)
         # Transform DTO to entity
         fixed_expense_entity = self.fixed_expense_toa.dto_to_entity(fixed_expense_dto)
 
@@ -65,6 +81,7 @@ class FixedExpenseService:
         return None
 
     def update_fixed_expense(self, fixed_expense_dto: FixedExpenseDTO,id):
+        self._resolve_payment_method_id(fixed_expense_dto)
         # Transform DTO to entity
         fixed_expense_entity = self.fixed_expense_toa.dto_to_entity(fixed_expense_dto)
 

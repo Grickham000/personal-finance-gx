@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import { useTheme } from '../../context/ThemeContext';
 import { Spacing, Shadows } from '../../constants/theme';
-import { Plus, Trash2, Pencil, X, Filter, Calendar, Receipt, ChevronLeft, ChevronRight, ArrowUpRight, ArrowDownRight } from 'lucide-react-native';
+import { Plus, Trash2, Pencil, X, Filter, Calendar, Receipt, ChevronLeft, ChevronRight, ArrowUpRight, ArrowDownRight, CreditCard } from 'lucide-react-native';
 import { getStyles } from '../../styles/expenses.styles';
 import { useExpenses } from '../../hooks/useExpenses';
 import { formatCurrency } from '../../utils/currency';
@@ -82,6 +82,8 @@ export default function ExpensesScreen() {
     setFixedAmount,
     fixedCategory,
     setFixedCategory,
+    fixedPaymentMethodName,
+    setFixedPaymentMethodName,
     fixedDescription,
     setFixedDescription,
     fixedStartDate,
@@ -475,9 +477,19 @@ export default function ExpensesScreen() {
 
               <View style={styles.expenseFooterRow}>
                 <View style={styles.metaRowVertical}>
-                  <Text style={[styles.categoryBadge, { backgroundColor: colors.primaryLight, color: colors.primary }]}>
-                    {item.fexpense_type}
-                  </Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                    <Text style={[styles.categoryBadge, { backgroundColor: colors.primaryLight, color: colors.primary }]}>
+                      {item.fexpense_type}
+                    </Text>
+                    {item.payment_method ? (
+                      <View style={[styles.categoryBadge, { backgroundColor: 'rgba(234, 88, 12, 0.14)', flexDirection: 'row', alignItems: 'center', gap: 4 }]}>
+                        <CreditCard size={11} color="#EA580C" />
+                        <Text style={{ color: '#EA580C', fontSize: 11, fontWeight: '700' }}>
+                          {item.payment_method}
+                        </Text>
+                      </View>
+                    ) : null}
+                  </View>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
                     <View style={{
                       width: 18,
@@ -711,6 +723,47 @@ export default function ExpensesScreen() {
                       </Text>
                     </TouchableOpacity>
                   ))}
+                </View>
+              </View>
+
+              <View style={styles.formGroup}>
+                <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Credit Card (Optional)</Text>
+                <Text style={{ fontSize: 11, color: colors.textMuted, marginBottom: 8 }}>
+                  Link to a credit card to automatically include this recurring expense in its billing statements.
+                </Text>
+                <View style={styles.chipsContainer}>
+                  <TouchableOpacity
+                    style={[
+                      styles.formChip,
+                      { borderColor: colors.border },
+                      !fixedPaymentMethodName && { backgroundColor: colors.primary, borderColor: colors.primary }
+                    ]}
+                    onPress={() => setFixedPaymentMethodName('')}
+                  >
+                    <Text style={[styles.formChipText, { color: colors.text }, !fixedPaymentMethodName && { color: '#FFF' }]}>
+                      None
+                    </Text>
+                  </TouchableOpacity>
+                  {(profile?.payment_methods || [])
+                    .filter((pm: any) => !pm.is_immediate)
+                    .map((pm: any) => (
+                      <TouchableOpacity
+                        key={pm.id || pm.name}
+                        style={[
+                          styles.formChip,
+                          { borderColor: colors.border, flexDirection: 'row', alignItems: 'center', gap: 5 },
+                          fixedPaymentMethodName === pm.name && { backgroundColor: colors.primary, borderColor: colors.primary }
+                        ]}
+                        onPress={() =>
+                          setFixedPaymentMethodName(fixedPaymentMethodName === pm.name ? '' : pm.name)
+                        }
+                      >
+                        <CreditCard size={13} color={fixedPaymentMethodName === pm.name ? '#FFF' : colors.textSecondary} />
+                        <Text style={[styles.formChipText, { color: colors.text }, fixedPaymentMethodName === pm.name && { color: '#FFF' }]}>
+                          {pm.name}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
                 </View>
               </View>
 

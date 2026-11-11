@@ -154,6 +154,28 @@ class MoneyBalanceService:
         # Define target month boundaries
         target_start = datetime(target_year, target_month, 1)
         target_end = datetime(target_year, target_month, calendar.monthrange(target_year, target_month)[1], 23, 59, 59)
+        now = datetime.now()
+        ref_now = now if (target_year == now.year and target_month == now.month) else target_end
+
+        def _get_cycle_bounds(c_year: int, c_month: int, cut_day: int):
+            last_d = calendar.monthrange(c_year, c_month)[1]
+            c_day = min(max(1, cut_day), last_d)
+            c_date = datetime(c_year, c_month, c_day)
+            c_end = datetime(c_year, c_month, c_day, 23, 59, 59)
+            if c_month == 1:
+                p_year, p_month = c_year - 1, 12
+            else:
+                p_year, p_month = c_year, c_month - 1
+            p_last_d = calendar.monthrange(p_year, p_month)[1]
+            p_day = min(max(1, cut_day), p_last_d)
+            c_start = datetime(p_year, p_month, p_day) + timedelta(days=1)
+            return c_start, c_end, c_date
+
+        def _shift_month(y: int, m: int, offset: int):
+            total_m = (y * 12 + (m - 1)) + offset
+            return total_m // 12, (total_m % 12) + 1
+
+        credit_card_fixed_expenses = []
 
         for fe in fixed_expenses:
             fe_amount = float(fe.fixed_expense)
@@ -163,14 +185,50 @@ class MoneyBalanceService:
             try:
                 fe_start = datetime.fromisoformat(fe_start_str) if isinstance(fe_start_str, str) else fe_start_str
                 fe_end = datetime.fromisoformat(fe_end_str) if isinstance(fe_end_str, str) else fe_end_str
+                if getattr(fe_start, 'tzinfo', None):
+                    fe_start = fe_start.replace(tzinfo=None)
+                if fe_end and getattr(fe_end, 'tzinfo', None):
+                    fe_end = fe_end.replace(tzinfo=None)
             except Exception as e:
                 logging.error(f"Error parsing fixed expense dates: {e}")
                 continue
 
-            # Check if active in target month
+            # Resolve optional credit card / payment method on fixed expense
+            fe_pm_config = None
+            fe_pm_id = getattr(fe, 'payment_method_id', None)
+            fe_pm_name = getattr(fe, 'payment_method', None)
+            if fe_pm_id:
+                fe_pm_config = pm_by_id.get(fe_pm_id)
+            if not fe_pm_config and fe_pm_name:
+                fe_pm_config = pm_by_name.get(fe_pm_name.lower())
+
+            if fe_pm_config and not fe_pm_config.get('is_immediate', False):
+                # Fixed expense is linked to a credit card
+                credit_card_fixed_expenses.append((fe, fe_amount, fe_start, fe_end, fe_pm_config))
+                cut_date_day = fe_pm_config.get('cut_date', 1) or 1
+                days_to_pay = fe_pm_config.get('days_to_pay', 0) or 0
+
+                for offset in (-2, -1, 0, 1):
+                    c_year, c_month = _shift_month(target_year, target_month, offset)
+                    c_start, c_end, c_date = _get_cycle_bounds(c_year, c_month, cut_date_day)
+                    payment_due_date = c_date + timedelta(days=days_to_pay)
+                    if payment_due_date.year == target_year and payment_due_date.month == target_month:
+                        is_active = (fe_start <= c_end) and (not fe.expire or (fe_end is not None and fe_end >= c_start))
+                        if is_active:
+                            stmt_month = f"{c_year:04d}-{c_month:02d}"
+                            is_cycle_paid = False
+                            if fe_pm_config.get('id') and (fe_pm_config['id'], stmt_month) in paid_cycles_by_id:
+                                is_cycle_paid = True
+                            elif (fe_pm_config['name'].lower(), stmt_month) in paid_cycles_by_name:
+                                is_cycle_paid = True
+                            if not is_cycle_paid:
+                                total_credit_expenses_due += fe_amount
+                continue
+
+            # Check if active in target month (non-credit-card fixed expense)
             if fe_start <= target_end:
                 if fe.expire:
-                    if fe_end >= target_start:
+                    if fe_end and fe_end >= target_start:
                         total_fixed_expenses += fe_amount
                 else:
                     # Does not expire
@@ -208,6 +266,16 @@ class MoneyBalanceService:
                 stmt_month = f"{c_year:04d}-{c_month:02d}"
                 card_key = pm_config.get('id') or pm_config.get('name').lower()
                 cc_expenses_by_cycle[(card_key, stmt_month)] = cc_expenses_by_cycle.get((card_key, stmt_month), 0.0) + exp_amount
+
+        for fe, fe_amount, fe_start, fe_end, fe_pm_config in credit_card_fixed_expenses:
+            cut_date_day = fe_pm_config.get('cut_date', 1) or 1
+            card_key = fe_pm_config.get('id') or fe_pm_config.get('name').lower()
+            for offset in range(-6, 2):
+                c_year, c_month = _shift_month(target_year, target_month, offset)
+                c_start, c_end, _ = _get_cycle_bounds(c_year, c_month, cut_date_day)
+                if c_start <= ref_now and fe_start <= c_end and (not fe.expire or (fe_end is not None and fe_end >= c_start)):
+                    stmt_month = f"{c_year:04d}-{c_month:02d}"
+                    cc_expenses_by_cycle[(card_key, stmt_month)] = cc_expenses_by_cycle.get((card_key, stmt_month), 0.0) + fe_amount
 
         cc_payments_by_cycle = {}
         for pay in cc_payments:

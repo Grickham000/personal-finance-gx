@@ -63,6 +63,7 @@ export const useExpenses = () => {
   const [fixedModalVisible, setFixedModalVisible] = useState(false);
   const [fixedAmount, setFixedAmount] = useState('');
   const [fixedCategory, setFixedCategory] = useState('');
+  const [fixedPaymentMethodName, setFixedPaymentMethodName] = useState('');
   const [fixedDescription, setFixedDescription] = useState('');
   const [fixedStartDate, setFixedStartDate] = useState('');
   const [fixedEndDate, setFixedEndDate] = useState('');
@@ -308,6 +309,7 @@ export const useExpenses = () => {
     setEditingFixedId(null);
     setFixedAmount('');
     setFixedDescription('');
+    setFixedPaymentMethodName('');
     setFixedExpire(false);
     
     const today = new Date();
@@ -331,6 +333,14 @@ export const useExpenses = () => {
     setFixedAmount(String(item.fixed_expense));
     setFixedCategory(item.fexpense_type);
     setFixedDescription(item.fexpense_description);
+    
+    const matchedCard = profile?.payment_methods?.find(
+      (pm: any) =>
+        !pm.is_immediate &&
+        ((item.payment_method_id && pm.id === item.payment_method_id) ||
+          (item.payment_method && pm.name?.toLowerCase() === item.payment_method.toLowerCase()))
+    );
+    setFixedPaymentMethodName(matchedCard ? matchedCard.name : (item.payment_method || ''));
     
     const startD = new Date(item.fexpense_start_date);
     const startStr = `${startD.getFullYear()}-${String(startD.getMonth() + 1).padStart(2, '0')}-${String(startD.getDate()).padStart(2, '0')}`;
@@ -373,6 +383,10 @@ export const useExpenses = () => {
     setSubmitting(true);
     setFixedError('');
 
+    const selectedCard = fixedPaymentMethodName
+      ? profile?.payment_methods?.find((pm: any) => pm.name === fixedPaymentMethodName)
+      : null;
+
     try {
       const payload = {
         fixed_expense: parseFloat(fixedAmount),
@@ -381,6 +395,8 @@ export const useExpenses = () => {
         fexpense_start_date: `${fixedStartDate} 12:00:00`,
         fexpense_end_date: fixedExpire && fixedEndDate ? `${fixedEndDate} 12:00:00` : null,
         expire: fixedExpire,
+        payment_method: selectedCard ? selectedCard.name : (fixedPaymentMethodName || null),
+        payment_method_id: selectedCard?.id || null,
       };
 
       if (editingFixedId) {
@@ -390,7 +406,6 @@ export const useExpenses = () => {
       }
 
       setFixedModalVisible(false);
-      setLoading(true);
       await fetchProfileAndFixed();
       Alert.alert('Success', `Fixed expense ${editingFixedId ? 'updated' : 'created'} successfully!`);
     } catch (err: any) {
@@ -398,6 +413,7 @@ export const useExpenses = () => {
       setFixedError(extractErrorMessage(err));
     } finally {
       setSubmitting(false);
+      setLoading(false);
     }
   };
 
@@ -488,6 +504,8 @@ export const useExpenses = () => {
     setFixedAmount,
     fixedCategory,
     setFixedCategory,
+    fixedPaymentMethodName,
+    setFixedPaymentMethodName,
     fixedDescription,
     setFixedDescription,
     fixedStartDate,

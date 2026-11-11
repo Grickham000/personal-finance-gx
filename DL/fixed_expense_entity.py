@@ -1,6 +1,6 @@
 #This is the Entity model for expenses
 class BaseExpenseEntity:
-    def __init__(self, user_id, fixed_expense, fexpense_type, fexpense_description, fexpense_start_date, fexpense_end_date,expire):
+    def __init__(self, user_id, fixed_expense, fexpense_type, fexpense_description, fexpense_start_date, fexpense_end_date, expire, payment_method=None, payment_method_id=None):
         self.user_id = user_id
         self.fixed_expense = fixed_expense
         self.fexpense_type = fexpense_type
@@ -8,6 +8,8 @@ class BaseExpenseEntity:
         self.fexpense_start_date = fexpense_start_date
         self.fexpense_end_date = fexpense_end_date
         self.expire = expire
+        self.payment_method = payment_method
+        self.payment_method_id = payment_method_id
 #To dict function to help us return the data as dictionary
     def to_dict(self):
         return {
@@ -17,19 +19,21 @@ class BaseExpenseEntity:
             'fexpense_description': self.fexpense_description,
             'fexpense_start_date': self.fexpense_start_date,
             'fexpense_end_date': self.fexpense_end_date,
-            'expire':self.expire
+            'expire': self.expire,
+            'payment_method': self.payment_method,
+            'payment_method_id': self.payment_method_id
         }
 #Help us to get the data in a printable format
     def __repr__(self):
         return (f"{self.__class__.__name__}(user_id={self.user_id}, fixed_expense={self.fixed_expense}, "
                 f"fexpense_type={self.fexpense_type}, fexpense_description={self.fexpense_description}, "
                 f"fexpense_start_date={self.fexpense_start_date}, fexpense_end_date={self.fexpense_end_date},"
-                f"expire={self.expire})")
+                f"expire={self.expire}, payment_method={self.payment_method}, payment_method_id={self.payment_method_id})")
 
 #Polimorfism to validate when we get an Id to delte or update
 class FixedExpenseEntity(BaseExpenseEntity):
-    def __init__(self, user_id, fixed_expense, fexpense_type, fexpense_description, fexpense_start_date, fexpense_end_date, expire, id=None):
-        super().__init__(user_id, fixed_expense, fexpense_type, fexpense_description, fexpense_start_date, fexpense_end_date, expire)
+    def __init__(self, user_id, fixed_expense, fexpense_type, fexpense_description, fexpense_start_date, fexpense_end_date, expire, id=None, payment_method=None, payment_method_id=None):
+        super().__init__(user_id, fixed_expense, fexpense_type, fexpense_description, fexpense_start_date, fexpense_end_date, expire, payment_method, payment_method_id)
         self.id = id
 
     def to_dict(self):
@@ -48,7 +52,9 @@ class FixedExpenseEntity(BaseExpenseEntity):
             fexpense_start_date=data['fexpense_start_date'],
             fexpense_end_date=data['fexpense_end_date'],
             expire=data['expire'],
-            id=id
+            id=id,
+            payment_method=data.get('payment_method'),
+            payment_method_id=data.get('payment_method_id')
         )
 #Help us to get the data in a printable format
     def __repr__(self):

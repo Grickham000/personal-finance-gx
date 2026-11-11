@@ -1,7 +1,9 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { ActivityIndicator, View } from 'react-native';
 import { onAuthStateChanged, User } from 'firebase/auth';
-import { auth } from '../services/auth';
+import { auth, tryRestoreSession } from '../services/auth';
 import { useRouter, useSegments } from 'expo-router';
+import { useTheme } from './ThemeContext';
 
 interface AuthContextType {
   user: User | null;
@@ -19,15 +21,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   
   const segments = useSegments();
   const router = useRouter();
+  const { colors } = useTheme();
 
   useEffect(() => {
+    let isMounted = true;
+
     // Subscribe to auth state updates
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      setUser(firebaseUser);
-      setIsLoading(false);
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        if (isMounted) {
+          setUser(firebaseUser);
+          setIsLoading(false);
+        }
+        return;
+      }
+
+      // If no active Firebase user, attempt silent SSO session restoration
+      const restoredUser = await tryRestoreSession();
+      if (isMounted) {
+        setUser(restoredUser);
+        setIsLoading(false);
+      }
     });
 
-    return unsubscribe;
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
   }, []);
 
   // Handle routing guards based on auth state
@@ -44,6 +64,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       router.replace('/(tabs)');
     }
   }, [user, segments, isLoading]);
+
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background }}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
 
   return (
     <AuthContext.Provider value={{ user, isLoading }}>

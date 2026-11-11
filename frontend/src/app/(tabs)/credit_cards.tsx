@@ -560,7 +560,7 @@ export default function CreditCardsScreen() {
                           <ArrowUpRight size={12} color={colors.danger} />
                         )}
                         <Text style={[styles.expItemDate, { color: colors.textSecondary }]}>
-                          {formatRawDate(exp.expense_date)} • {exp.expense_type}
+                          {formatRawDate(exp.expense_date)} • {exp.expense_type}{exp.is_fixed ? ' • Fixed' : ''}
                         </Text>
                       </View>
                     </View>

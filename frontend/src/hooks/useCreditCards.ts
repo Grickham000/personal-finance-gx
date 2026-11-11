@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Alert } from 'react-native';
+import { useFocusEffect } from 'expo-router';
 import { apiService } from '../services/api';
 import { extractErrorMessage } from '../utils/errors';
 
@@ -20,6 +21,7 @@ export const useCreditCards = () => {
   // Data states
   const [profile, setProfile] = useState<any>(null);
   const [expenses, setExpenses] = useState<any[]>([]);
+  const [fixedExpenses, setFixedExpenses] = useState<any[]>([]);
   const [payments, setPayments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -39,15 +41,17 @@ export const useCreditCards = () => {
   // Fetch all credit cards data
   const fetchData = useCallback(async () => {
     try {
-      const [profileData, expensesData, paymentsData] = await Promise.all([
+      const [profileData, expensesData, paymentsData, fixedExpensesData] = await Promise.all([
         apiService.getUserProfile().catch(() => null),
         apiService.getExpenses().catch(() => []),
-        apiService.getCreditCardPayments().catch(() => [])
+        apiService.getCreditCardPayments().catch(() => []),
+        apiService.getFixedExpenses().catch(() => [])
       ]);
 
       setProfile(profileData);
       setExpenses(expensesData || []);
       setPayments(paymentsData || []);
+      setFixedExpenses(fixedExpensesData || []);
 
       const creditCards = (profileData?.payment_methods || []).filter((pm: any) => !pm.is_immediate);
       if (creditCards.length > 0 && !activeCardId) {
@@ -61,9 +65,11 @@ export const useCreditCards = () => {
     }
   }, [activeCardId]);
 
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+  useFocusEffect(
+    useCallback(() => {
+      fetchData();
+    }, [fetchData])
+  );
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -106,7 +112,7 @@ export const useCreditCards = () => {
 
       const statementMonth = `${year}-${String(month).padStart(2, '0')}`;
 
-      const statementExpenses = expenses.filter(exp => {
+      const statementVariableExpenses = expenses.filter(exp => {
         const expDate = new Date(exp.expense_date);
         const isCardMatch = 
           (exp.payment_method_id && exp.payment_method_id === cardId) ||
@@ -115,7 +121,48 @@ export const useCreditCards = () => {
         return isCardMatch && isDateMatch;
       });
 
-      const totalSpent = statementExpenses.reduce((sum, exp) => sum + exp.expense, 0);
+      const isCycleStarted = startDate <= today;
+      const statementFixedExpenses = isCycleStarted
+        ? fixedExpenses
+            .filter(fe => {
+              const isCardMatch =
+                (fe.payment_method_id && cardId && fe.payment_method_id === cardId) ||
+                (fe.payment_method && fe.payment_method.toLowerCase() === cardNameLower);
+              if (!isCardMatch) return false;
+              const feStart = new Date(fe.fexpense_start_date);
+              const feEnd = fe.expire && fe.fexpense_end_date ? new Date(fe.fexpense_end_date) : null;
+              if (isNaN(feStart.getTime())) return false;
+              return feStart <= endDate && (!fe.expire || !feEnd || feEnd >= startDate);
+            })
+            .map(fe => {
+              const feStart = new Date(fe.fexpense_start_date);
+              const billingDay = feStart.getDate() || 1;
+              let occDate: Date;
+              if (billingDay <= cutDateDay) {
+                const dayClamped = Math.min(billingDay, lastDayOfCutoffMonth);
+                occDate = new Date(year, month - 1, dayClamped, 12, 0, 0);
+              } else {
+                const dayClamped = Math.min(billingDay, lastDayOfPrevMonth);
+                occDate = new Date(prevYear, prevMonth - 1, dayClamped, 12, 0, 0);
+              }
+              return {
+                id: `fixed_${fe.id}_${statementMonth}`,
+                expense: Number(fe.fixed_expense) || 0,
+                expense_description: fe.fexpense_description,
+                expense_type: fe.fexpense_type,
+                expense_date: occDate.toISOString(),
+                payment_method: card.name,
+                payment_method_id: cardId,
+                is_fixed: true,
+              };
+            })
+        : [];
+
+      const statementExpenses = [...statementVariableExpenses, ...statementFixedExpenses].sort(
+        (a, b) => new Date(b.expense_date).getTime() - new Date(a.expense_date).getTime()
+      );
+
+      const totalSpent = statementExpenses.reduce((sum, exp) => sum + (Number(exp.expense) || 0), 0);
 
       const statementPayments = payments.filter(pay => {
         const isCardMatch = 
@@ -158,7 +205,7 @@ export const useCreditCards = () => {
     }
 
     return statements.sort((a, b) => b.statementMonth.localeCompare(a.statementMonth));
-  }, [expenses, payments]);
+  }, [expenses, fixedExpenses, payments]);
 
   const activeCardPayments = payments.filter(pay => {
     const isCardMatch = 

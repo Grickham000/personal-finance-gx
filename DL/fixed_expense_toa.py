@@ -10,7 +10,9 @@ class FixedExpenseTOA:
             fexpense_description=dto.fexpense_description,
             fexpense_start_date=dto.fexpense_start_date,
             fexpense_end_date=dto.fexpense_end_date,
-            expire=dto.expire
+            expire=dto.expire,
+            payment_method=dto.payment_method,
+            payment_method_id=dto.payment_method_id
         )
 
     def entity_to_dto(self, entity: FixedExpenseEntity) -> FixedExpenseDTO:
@@ -22,5 +24,7 @@ class FixedExpenseTOA:
             fexpense_description=entity.fexpense_description,
             fexpense_start_date=entity.fexpense_start_date,
             fexpense_end_date=entity.fexpense_end_date,
-            expire=entity.expire
+            expire=entity.expire,
+            payment_method=entity.payment_method,
+            payment_method_id=entity.payment_method_id
         )
