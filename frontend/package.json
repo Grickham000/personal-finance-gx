@@ -37,7 +37,6 @@
   },
   "devDependencies": {
     "@types/react": "~19.2.2",
-    "eas-cli": "^24.12.1",
     "eslint": "^9.0.0",
     "eslint-config-expo": "~56.0.4",
     "typescript": "~6.0.3"
@@ -49,9 +48,9 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "lint": "expo lint",
-    "build:production": "eas build --platform android --profile production --non-interactive --no-wait",
-    "build:preview": "eas build --platform android --profile preview --non-interactive --no-wait",
-    "build:status": "eas build:list --limit 1"
+    "build:production": "npx eas-cli build --platform android --profile production --non-interactive --no-wait",
+    "build:preview": "npx eas-cli build --platform android --profile preview --non-interactive --no-wait",
+    "build:status": "npx eas-cli build:list --limit 1"
   },
   "private": true
 }
